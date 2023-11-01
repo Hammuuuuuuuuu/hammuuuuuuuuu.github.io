@@ -1,0 +1,54 @@
+<html>
+<head>
+<title>Character List</title>
+<style>
+    th, td
+    {
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+    <h1 align = center>Character Information</h1>
+    <table align = center border = 2 style="border-collapse:collapse;">
+        <tr>
+            <th>Name</th>
+            <th>From Which Game</th>
+            <th>Biography</th>
+            <th>Age</th>
+            <th>DoB</th>
+        </tr>
+        <tbody id="charactertable"></tbody>
+    </table>
+    <script>
+        fetch('CharacterXML.xml') 
+            .then(response => response.text())
+            .then(data => {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(data, 'text/xml');
+                const persons = xmlDoc.getElementsByTagName('character');
+                const table = document.getElementById('charactertable');
+                for (let i = 0; i < character.length; i++) {
+                    const char = character[i];
+                    const name = char.getElementsByTagName('name')[0].textContent;
+                    const game = char.getElementsByTagName('game')[0].textContent;
+                    const bio = char.getElementsByTagName('bio')[0].textContent;
+                    const age = char.getElementsByTagName('age')[0].textContent;
+                    const dob = char.getElementByTagName('dob')[0].textContent;
+                    const row = table.insertRow(i);
+                    const nameCell = row.insertCell(0);
+                    const gameCell = row.insertCell(1);
+                    const bioCell = row.insertCell(2);
+                    const ageCell = row.insertCell(3);
+                    const dobCell = row.insertCell(4);
+                    nameCell.innerHTML = name;
+                    gameCell.innerHTML = game;
+                    bioCell.innerHTML = bio;
+                    ageCell.innerHTML = age;
+                    dobCell.innerHTML = dob;
+                 }
+            })
+            .catch(error => console.error(error));
+    </script>
+</body>
+</html>
