@@ -34,8 +34,9 @@
             .then(data => {
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(data, 'text/xml');
-                const persons = xmlDoc.getElementsByTagName('character');
-                const table = document.getElementById('charactertable');
+                const character = xmlDoc.getElementsByTagName('character');
+                const charactertable = document.getElementById('charactertable');
+
                 for (let i = 0; i < character.length; i++) {
                     const char = character[i];
                     const name = char.getElementsByTagName('name')[0].textContent;
@@ -43,12 +44,14 @@
                     const bio = char.getElementsByTagName('bio')[0].textContent;
                     const age = char.getElementsByTagName('age')[0].textContent;
                     const dob = char.getElementByTagName('dob')[0].textContent;
-                    const row = table.insertRow(i);
+
+                    const row = charactertable.insertRow(i);
                     const nameCell = row.insertCell(0);
                     const gameCell = row.insertCell(1);
                     const bioCell = row.insertCell(2);
                     const ageCell = row.insertCell(3);
                     const dobCell = row.insertCell(4);
+                    
                     nameCell.innerHTML = name;
                     gameCell.innerHTML = game;
                     bioCell.innerHTML = bio;
