@@ -55,4 +55,18 @@
         <age>18</age>
         <dob>2/1</dob>
     </character>
+    <character>
+        <name>Hoshino Ichika</name>
+        <game>Project Sekai</game>
+        <bio>Singer and Guitarist of a rock band named Leo/Need</bio>
+        <age>17</age>
+        <dob>11/8</dob>
+    </character>
+    <character>
+        <name>Alice Tendou</name>
+        <game>Blue Archive</game>
+        <bio>A member of the Game Development Department</bio>
+        <age>17</age>
+        <dob>25/3</dob>
+    </character>
 </list>
