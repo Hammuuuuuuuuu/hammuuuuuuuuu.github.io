@@ -34,4 +34,25 @@
         <age>23</age>
         <dob>23/11</dob>
     </character>
+    <character>
+        <name>Kamisato Ayaka</name>
+        <game>Genshin Impact</game>
+        <bio>Eldest daughter of the Kamisato Clan</bio>
+        <age>18</age>
+        <dob>28/9</dob>
+    </character>
+    <character>
+        <name>Yoru(Kiritani Ryo)</name>
+        <game>VAL</game>
+        <bio>Japanese native Yoru who rips holes through dimension</bio>
+        <age>21</age>
+        <dob>12/1</dob>
+    </character>
+    <character>
+        <name>Takanashi Hoshino</name>
+        <game>Blue Archive</game>
+        <bio>Leader of the Countermeasures Committee</bio>
+        <age>18</age>
+        <dob>2/1</dob>
+    </character>
 </list>
