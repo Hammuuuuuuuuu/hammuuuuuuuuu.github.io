@@ -1,0 +1,19 @@
+body { 
+    background-color:aliceblue;
+    padding: 25px;
+    font-size:200%;
+}
+h1{
+    color:azure;
+    padding: 15px;
+    background: silver;
+    width:fit-content;
+    font-family:cursive;
+    font-size:300%
+}
+font{font-weight: bold}
+
+p.special {
+    line-height: 150%;
+    border-style:double;
+}
