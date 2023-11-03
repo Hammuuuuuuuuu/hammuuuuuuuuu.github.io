@@ -1,0 +1,63 @@
+<html>
+<head>
+<title>Character List</title>
+<link rel="icon" href="arisu.gif" type="image/gif">
+<meta name = viewport content = width = device-width, initial-scale = 1.0>
+<style>
+    table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+    th, td {
+            border: 1px solid azure;
+            text-align: left;
+            padding: 8px;
+        }
+    th {
+            background-color: rgb(223, 178, 127);
+        }
+</style>
+</head>
+<body bgcolor="#33AAEE">
+    <h1 align = center>Character Information</h1>
+    <table style="border-collapse:collapse;">
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Phone</th>
+            <th>Scores</th>
+        </tr>
+        <tbody id="charactertable"></tbody>
+    </table>
+    <script>
+        fetch('Andeline_Lim_Jing_En_DCS2309264.xml') 
+            .then(response => response.text())
+            .then(data => {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(data, 'text/xml');
+                const character = xmlDoc.getElementsByTagName('student');
+                const charactertable = document.getElementById('charactertable');
+
+                for (let i = 0; i < character.length; i++) {
+                    const char = character[i];
+                    const name = char.getElementsByTagName('name')[0].textContent;
+                    const age = char.getElementsByTagName('age')[0].textContent;
+                    const hp = char.getElementsByTagName('hp')[0].textContent;
+                    const scored = char.getElementsByTagName('scores')[0].textContent;
+
+                    const row = charactertable.insertRow(i);
+                    const nameCell = row.insertCell(0);
+                    const ageCell = row.insertCell(1);
+                    const hpCell = row.insertCell(2);
+                    const scoresCell = row.insertCell(3);
+
+                    nameCell.innerHTML = name;
+                    ageCell.innerHTML = age;
+                    hpCell.innerHTML = hp;
+                    scoresCell.innerHTML = scores;
+                  }
+            })
+            .catch(error => console.error(error));
+    </script>
+</body>
+</html>
