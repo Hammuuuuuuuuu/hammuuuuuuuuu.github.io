@@ -41,20 +41,20 @@
                 for (let i = 0; i < character.length; i++) {
                     const char = character[i];
                     const name = char.getElementsByTagName('name')[0].textContent;
-                    const game = char.getElementsByTagName('game')[0].textContent;
-                    const bio = char.getElementsByTagName('bio')[0].textContent;
                     const age = char.getElementsByTagName('age')[0].textContent;
+                    const hp = char.getElementsByTagName('hp')[0].textContent;
+                    const scored = char.getElementsByTagName('scores')[0].textContent;
 
                     const row = charactertable.insertRow(i);
                     const nameCell = row.insertCell(0);
-                    const gameCell = row.insertCell(1);
-                    const bioCell = row.insertCell(2);
-                    const ageCell = row.insertCell(3);
+                    const ageCell = row.insertCell(1);
+                    const hpCell = row.insertCell(2);
+                    const scoresCell = row.insertCell(3);
 
                     nameCell.innerHTML = name;
-                    gameCell.innerHTML = game;
-                    bioCell.innerHTML = bio;
-                    ageCell.innerHTML = age;
+                    ageCell.innerHTML = game;
+                    hpCell.innerHTML = bio;
+                    scoresCell.innerHTML = age;
                   }
             })
             .catch(error => console.error(error));
