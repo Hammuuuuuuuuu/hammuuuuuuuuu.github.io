@@ -27,7 +27,7 @@
             <th>Phone</th>
             <th>Scores</th>
         </tr>
-        <tbody id="charactertable"></tbody>
+        <tbody id="studentList"></tbody>
     </table>
     <script>
         fetch('Andeline_Lim_Jing_En_DCS2309264.xml') 
@@ -35,11 +35,11 @@
             .then(data => {
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(data, 'text/xml');
-                const character = xmlDoc.getElementsByTagName('student');
-                const charactertable = document.getElementById('charactertable');
+                const student = xmlDoc.getElementsByTagName('student');
+                const studentList = document.getElementById('studentList');
 
-                for (let i = 0; i < character.length; i++) {
-                    const char = character[i];
+                for (let i = 0; i < student.length; i++) {
+                    const char = student[i];
                     const name = char.getElementsByTagName('name')[0].textContent;
                     const age = char.getElementsByTagName('age')[0].textContent;
                     const hp = char.getElementsByTagName('hp')[0].textContent;
