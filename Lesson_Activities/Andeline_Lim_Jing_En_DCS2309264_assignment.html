@@ -1,0 +1,63 @@
+<html>
+<head>
+<title>Character List</title>
+<link rel="icon" href="arisu.gif" type="image/gif">
+<meta name = viewport content = width = device-width, initial-scale = 1.0>
+<style>
+    table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+    th, td {
+            border: 1px solid azure;
+            text-align: left;
+            padding: 8px;
+        }
+    th {
+            background-color: rgb(223, 178, 127);
+        }
+</style>
+</head>
+<body bgcolor="#33AAEE">
+    <h1 align = center>Character Information</h1>
+    <table style="border-collapse:collapse;">
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Phone</th>
+            <th>Scores</th>
+        </tr>
+        <tbody id="charactertable"></tbody>
+    </table>
+    <script>
+        fetch('Andeline_Lim_Jing_En.xml') 
+            .then(response => response.text())
+            .then(data => {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(data, 'text/xml');
+                const character = xmlDoc.getElementsByTagName('character');
+                const charactertable = document.getElementById('charactertable');
+
+                for (let i = 0; i < character.length; i++) {
+                    const char = character[i];
+                    const name = char.getElementsByTagName('name')[0].textContent;
+                    const game = char.getElementsByTagName('game')[0].textContent;
+                    const bio = char.getElementsByTagName('bio')[0].textContent;
+                    const age = char.getElementsByTagName('age')[0].textContent;
+
+                    const row = charactertable.insertRow(i);
+                    const nameCell = row.insertCell(0);
+                    const gameCell = row.insertCell(1);
+                    const bioCell = row.insertCell(2);
+                    const ageCell = row.insertCell(3);
+
+                    nameCell.innerHTML = name;
+                    gameCell.innerHTML = game;
+                    bioCell.innerHTML = bio;
+                    ageCell.innerHTML = age;
+                  }
+            })
+            .catch(error => console.error(error));
+    </script>
+</body>
+</html>
