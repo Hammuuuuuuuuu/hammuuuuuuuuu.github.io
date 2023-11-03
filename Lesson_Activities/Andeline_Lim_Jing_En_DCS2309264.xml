@@ -3,45 +3,35 @@
         <name>John</name>
         <age>18</age>
         <hp>60+112358975</hp>
-        <scores>
-            <English>70</English>
-            <Mathematics>80</Mathematics>
+        <scores>90
         </scores>
     </student>
     <student>
         <name>Samuel</name>
         <age>20</age>
         <hp>60+124536678</hp>
-        <scores>
-            <English>49</English>
-            <Mathematics>64</Mathematics>
+        <scores>90
         </scores>
     </student>
     <student>
         <name>Amanda</name>
         <age>19</age>
         <hp>60+145597997</hp>
-        <scores>
-            <English>90</English>
-            <Mathematics>60</Mathematics>
+        <scores>90
         </scores>
     </student>
     <student>
         <name>Eve</name>
         <age>21</age>
         <hp>60+165589815</hp>
-        <scores>
-            <English>76</English>
-            <Mathematics>65</Mathematics>
+        <scores>90
         </scores>
     </student>
     <student>
         <name>Samanda</name>
         <age>18</age>
         <hp>60+126587934</hp>
-        <scores>
-            <English>46</English>
-            <Mathematics>68</Mathematics>
+        <scores>90
         </scores>
     </student>
 </studentList>
