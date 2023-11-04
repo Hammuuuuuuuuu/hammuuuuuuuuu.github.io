@@ -22,13 +22,12 @@
     <h1 align = center>Character Information</h1>
     <table style="border-collapse:collapse;">
         <tr>
-            <th>Name</th>
-            <th>From Which Game</th>
-            <th>Biography</th>
-            <th>Age</th>
-            <th>DoB</th>
+            <th>Component </th>
+            <th>Purchased From</th>
+            <th>Quantity</th>
+            <th>Price Per Piece</th>
         </tr>
-        <tbody id="charactertable"></tbody>
+        <tbody id="iotlist"></tbody>
     </table>
     <script>
         fetch('YamHungFong_DCS2304086.xml') 
@@ -36,30 +35,27 @@
             .then(data => {
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(data, 'text/xml');
-                const character = xmlDoc.getElementsByTagName('character');
-                const charactertable = document.getElementById('charactertable');
+                const student = xmlDoc.getElementsByTagName('iot');
+                const studentList = document.getElementById('iotlist');
 
-                for (let i = 0; i < character.length; i++) {
-                    const char = character[i];
-                    const name = char.getElementsByTagName('name')[0].textContent;
-                    const game = char.getElementsByTagName('game')[0].textContent;
-                    const bio = char.getElementsByTagName('bio')[0].textContent;
-                    const age = char.getElementsByTagName('age')[0].textContent;
-                    const dob = char.getElementsByTagName('dob')[0].textContent;
+                for (let i = 0; i < iot.length; i++) {
+                    const char = iot[i];
+                    const item = char.getElementsByTagName('item')[0].textContent;
+                    const from = char.getElementsByTagName('from')[0].textContent;
+                    const quantity = char.getElementsByTagName('quantity')[0].textContent;
+                    const price = char.getElementsByTagName('price')[0].textContent;
 
-                    const row = charactertable.insertRow(i);
-                    const nameCell = row.insertCell(0);
-                    const gameCell = row.insertCell(1);
-                    const bioCell = row.insertCell(2);
-                    const ageCell = row.insertCell(3);
-                    const dobCell = row.insertCell(4);
+                    const row = iotlist.insertRow(i);
+                    const itemCell = row.insertCell(0);
+                    const fromCell = row.insertCell(1);
+                    const quantityCell = row.insertCell(2);
+                    const priceCell = row.insertCell(3);
 
-                    nameCell.innerHTML = name;
-                    gameCell.innerHTML = game;
-                    bioCell.innerHTML = bio;
-                    ageCell.innerHTML = age;
-                    dobCell.innerHTML = dob;
-                 }
+                    itemCell.innerHTML = item;
+                    fromCell.innerHTML = from;
+                    quantityCell.innerHTML = quantity;
+                    priceCell.innerHTML = price;
+                  }
             })
             .catch(error => console.error(error));
     </script>
