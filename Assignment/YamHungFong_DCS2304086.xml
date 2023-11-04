@@ -1,72 +1,62 @@
 <list>
-    <character>
-        <name>Hanasato Minori</name>
-        <game>Project Sekai</game>
-        <bio>One of the idol girl from MORE MORE JUMP!</bio>
-        <age>17</age>
-        <dob>14/4</dob>
-    </character>
-    <character>
-        <name>Sunaookami Shiroko</name>
-        <game>Blue Archive</game>
-        <bio>A member of the Countermeasures Committee</bio>
-        <age>17</age>
-        <dob>16/5</dob>
-    </character>
-    <character>
-        <name>Topaz and Numby</name>
-        <game>Honkai: Star Rail</game>
-        <bio>Strategic Investment Department in IPC </bio>
-        <age>18</age>
-        <dob>27/10</dob>
-    </character>
-    <character>
-        <name>Fu Xuan</name>
-        <game>Honkai: Star Rail</game>
-        <bio>Master Diviner of the Xianzhou Luofu</bio>
-        <age>18</age>
-        <dob>20/9</dob>
-    </character>
-    <character>
-        <name>Wriothesley</name>
-        <game>Genshin Impact</game>
-        <bio>Administrator of the Fortress of Meropide</bio>
-        <age>23</age>
-        <dob>23/11</dob>
-    </character>
-    <character>
-        <name>Kamisato Ayaka</name>
-        <game>Genshin Impact</game>
-        <bio>Eldest daughter of the Kamisato Clan</bio>
-        <age>18</age>
-        <dob>28/9</dob>
-    </character>
-    <character>
-        <name>Yoru(Kiritani Ryo)</name>
-        <game>VAL</game>
-        <bio>Japanese native Yoru who rips holes through dimension</bio>
-        <age>21</age>
-        <dob>12/1</dob>
-    </character>
-    <character>
-        <name>Takanashi Hoshino</name>
-        <game>Blue Archive</game>
-        <bio>Leader of the Countermeasures Committee</bio>
-        <age>18</age>
-        <dob>2/1</dob>
-    </character>
-    <character>
-        <name>Hoshino Ichika</name>
-        <game>Project Sekai</game>
-        <bio>Singer and Guitarist of a rock band named Leo/Need</bio>
-        <age>17</age>
-        <dob>11/8</dob>
-    </character>
-    <character>
-        <name>Alice Tendou</name>
-        <game>Blue Archive</game>
-        <bio>A member of the Game Development Department</bio>
-        <age>17</age>
-        <dob>25/3</dob>
-    </character>
+    <iot>
+        <item>LED</item>
+        <from>Shopee</from>
+        <quantity>20</quantity>
+        <price>0. 20</price>
+    </iot>
+    <iot>
+        <item>Buzzer</item>
+        <from>Lazada</from>
+        <quantity>10</quantity>
+        <price>0.35</price>
+    </iot>
+    <iot>
+        <item>IR Receiver </item>
+        <from>Shop</from>
+        <quantity>15</quantity>
+        <price>0.50</price>
+    </iot>
+    <iot>
+        <item>Potentiometer</item>
+        <from>Shopee</from>
+        <quantity>5</quantity>
+        <price>3.50</price>
+    </iot>
+    <iot>
+        <item>7 Digit Segment</item>
+        <from>Shopee</from>
+        <quantity>17</quantity>
+        <price>2.50</price>
+    </iot>
+    <iot>
+        <item>Button</item>
+        <from>Lazada</from>
+        <quantity>38</quantity>
+        <price>0.45</price>
+    </iot>
+    <iot>
+        <item>Water Quality Sensor</item>
+        <from>Shopee</from>
+        <quantity>4</quantity>
+        <price>5.00</price>
+    </iot>
+    <iot>
+        <item>Temperature Sensor</item>
+        <from>Lazada </from>
+        <quantity>5</quantity>
+        <price>4.50</price>
+    </iot>    
+    <iot>
+        <item>USB Cable</item>
+        <from>Shop</from>
+        <quantity>50</quantity>
+        <price>2.50</price>
+    </iot>
+    <iot>
+        <item>Jumpers</item>
+        <from>Shopee</from>
+        <quantity>200</quantity>
+        <price>0.15</price>
+    </iot>
 </list>
