@@ -3,7 +3,7 @@
         <item>LED</item>
         <from>Shopee</from>
         <quantity>20</quantity>
-        <price>0. 20</price>
+        <price>0.20</price>
     </iot>
     <iot>
         <item>Buzzer</item>
