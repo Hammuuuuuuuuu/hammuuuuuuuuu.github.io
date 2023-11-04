@@ -35,8 +35,8 @@
             .then(data => {
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(data, 'text/xml');
-                const student = xmlDoc.getElementsByTagName('iot');
-                const studentList = document.getElementById('iotlist');
+                const iot = xmlDoc.getElementsByTagName('iot');
+                const iotlist = document.getElementById('iotlist');
 
                 for (let i = 0; i < iot.length; i++) {
                     const char = iot[i];
