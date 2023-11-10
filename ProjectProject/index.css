@@ -1,0 +1,29 @@
+main {
+    width: 100%;
+    height: calc(100vh - 60px);
+    background-color: rgb(241, 195, 195);
+    margin-top: 0px;
+    background-size: 70vh, cover;
+    background-repeat: no-repeat;
+    background-position: bottom, center;
+    display:flex;
+    justify-content: center ;
+    align-items: center;
+
+}
+
+main .mainintro h1 {
+    font-size: 90px;
+    line-height: 106px;
+}
+
+main .main-intro p, main .mainquote p {
+    font-size: 96px;
+    line-height: 106px;
+}
+
+main a {
+    font-size: 18px;
+    display: block;
+    background-color: var(--site-color-01);
+}
