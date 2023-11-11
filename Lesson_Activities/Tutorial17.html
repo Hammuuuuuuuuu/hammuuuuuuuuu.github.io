@@ -1,0 +1,81 @@
+<html>
+    <head>
+        <title>Form - Text Input</title>
+        <link rel = icon href="arisuu.gif" type="image/jpg">
+        <meta name="viewport" content="width"=device-width, initial-scale = 1.0>
+        <link rel="stylesheet" href="tutorial17css.css">
+    </head>
+    <body topmargin="50">
+        <center>
+            <form>
+                <p style="background-color: transparent; color: #33AAEE; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+                font-size: 160%;text-align: center;">    
+                    <br>
+                    <table border = 0 align="center">
+                    <h3>Personal Details: </h3>
+                    <tr>
+                        <td style="background-color: #ffadad; height: 20%;"><p>First Name: </p></td>
+                        <td ><input type="text" name="fname"></td>
+                    </tr>
+
+                    <tr>
+                        <td style="background-color: #ffd6a5;"><p>Last Name: </p></td>
+                        <td><input type = text name = lname></td>
+                    </tr>
+
+                    <tr>
+                        <td style="background-color: #fdffb6;"><p>Gender: </p></td>
+                        <td><input type="radio" name="Gender" value="Male">Male<input type="radio" name="Gender" value="Female">Female</td>
+                    </tr>
+
+                    <tr>
+                        <td style="background-color: #caffbf;"><p>Choose your favourite subjects: </p></td>
+                        <td><input type = checkbox name="fav_sub" value="DCS4103">DCS4103<input type = checkbox name="fav_sub" value="DCS3003">DCS3003<input type = checkbox name="fav_sub" value="MST1003">MST1003<input type = checkbox name="fav_sub" value="MST2003">MST2003
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="background-color: #9bf6ff;"><p>Address: </p></td>
+                        <td><textarea rows="4" cols="30" name="Address"></textarea></td>
+                    </tr>
+
+                    <tr>
+                        <td style = "background-color: #a0c4ff;"><p>Date of Birth:</p></td> 
+                        <td><input type="date"  name="dob"></td>
+                    </tr>
+
+                    <tr>
+                        <td style="background-color: #bdb2ff;"><p>Login Password:</p></td>
+                        <td><input type="password" name="loginpass"></td>
+                    </tr>
+
+                    <tr>
+                        <td style="background-color: #ffc6ff;"><p>Course:</p></td>
+                        <td>
+                            <select>
+                                <option value="0">- LIST OF COURSES -</option>
+                                <optgroup label="Diploma in Computer Science">
+                                    <option value="DCS_S1">Semester 1</option>
+                                    <option value="DCS_S2">Semester 2</option>
+                                    <option value="DCS_S3">Semester 3</option>
+                                    <option value="DCS_S4">Semester 4</option>
+                                    <option value="DCS_S5">Semester 5</option>
+                                    <option value="DCS_S6">Semester 6</option>
+                                </optgroup>
+                                <option value="DIB">Diploma in Business</option>
+                                <option value="DAS">Diploma in Airline Services</option>
+                            </select>
+                        </td>
+                    </tr>
+                    
+
+                </table>
+                <br><br>
+                <input type="submit" value="Submit">    
+                <input type="reset"  value="Reset">
+                </p>
+            </form>
+        </center>
+    </body>
+
+</html>
