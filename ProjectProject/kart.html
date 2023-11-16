@@ -1,0 +1,70 @@
+<html>
+<head>
+    <title>Kofi | Cart</title>
+    <link rel="icon" href = "kofi.jpg" type = image/png>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="font.css">
+</head>
+<body>
+  <div class="header">
+    <a href="Main2.0.html"><img src="kofi.jpg" alt = "logo" width="35px" height="35px"></a>
+    <div class="header-right">
+      <a class="active" href="Main2.0.html">Home</a>
+      <a href="Coffee.html">Coffee</a>
+      <a href="AboutUs.html">About</a>
+      <a href="Contact.html">Contact</a>
+      <a href="kart.html"><img src="shoppingcart.png" width = 35 height = 35></a>
+      <a href="signuppage.html"><img src="profile2.png" width="35" height="35"></a>
+    </div>
+  </div>
+<br><br><br><br><br><br>
+  <div id="cart">
+    <h2>Shopping Cart</h2>
+    <br>
+    <ul id="cartitems"></ul>
+    <p>Total: RM<span id="total">0</span></p>
+    <br>
+    <button onclick="clearC()" id="clearC">Clear Cart?</button>
+    <br>
+  </div>
+
+  <script>
+
+    window.onload = function () {
+      displayCart();
+    };
+
+    function displayCart() {
+      var cartItems = document.getElementById("cartitems");
+      var total = 0;
+
+
+      for (var i = 0; i < sessionStorage.length; i++) {
+        var key = sessionStorage.key(i);
+        var item = JSON.parse(sessionStorage.getItem(key));
+
+        var listItem = document.createElement("li");
+        listItem.textContent = "Product: " + key + ", Quantity: " + item.quantity + ", Total: RM" + item.total.toFixed(2);
+        cartItems.appendChild(listItem);
+
+        total += item.total;
+      }
+
+
+      document.getElementById("total").textContent = total.toFixed(2);
+    }
+
+    function clearC() {
+
+      sessionStorage.clear();
+      var cartItems = document.getElementById("cartitems");
+      while (cartItems.firstChild) {
+        cartItems.removeChild(cartItems.firstChild);
+      }
+      document.getElementById("total").textContent = '0.00';
+    }
+  </script>
+
+</body>
+</html>
