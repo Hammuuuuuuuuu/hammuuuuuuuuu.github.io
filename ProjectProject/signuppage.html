@@ -1,0 +1,68 @@
+<html>
+    <head>
+        <title>Kofi | Sign Up</title>
+        <link rel = icon href="kofi.jpg" type="image/jpg">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="header.css">
+        <link rel="stylesheet" href="font.css">
+        <link rel="stylesheet" href="herobanner.css">
+        <script>
+            function showdone() {
+                alert("Sign Up Successfully!");
+            }
+
+            function showreset() {
+                alert("Reset Successfully!");
+            }
+        </script>
+    </head>
+    <body>
+        <form>
+        <div class="header">
+            <a href="Main2.0.html"><img src="kofi.jpg" alt = "logo" width="35px" height="35px"></a>
+            <div class="header-right">
+              <a href="Main2.0.html">Home</a>
+              <a href="Coffee.html">Coffee</a>
+              <a href="AboutUs.html">About</a>
+              <a href="Contact.html">Contact</a>
+              <a href="kart.html"><img src="shoppingcart.png" width = 35 height = 35></a>
+              <a class="active" href="signuppage.html"><img src="profile2.png" width="35" height="35"></a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <div class="hero-text">
+              <h1>Greetings! Glad you are here to join the family.</h1><br>
+              <p>We hope you enjoy your time taking a sip of our coffee.</p>
+            </div>
+        </div>
+        <br><br>
+        <center>
+        <table align="center">
+            <h2>Sign Up Here!</h2>
+            <br><br>
+            <tr>
+                <td width = "500px" height = "150px">First Name:</td>
+                <td><input type="text" name="fname"></td>
+            </tr>
+            <tr>
+                <td  width = "500px" height = "150px">Last Name:</td>
+                <td><input type="text" name="lname"></td>
+            </tr>
+            <tr>
+                <td width = "500px" height = "150px">E-mail Address:</td>
+                <td><input type="text" name="E-mail"></td>
+            </tr>
+            <tr>
+                <td width = "500px" height = "150px">Address:</td>
+                <td><input type="text" name="Address"></td>
+            </tr>
+            <tr>
+                <td width = "500px" height = "150px">Mobile Number: </td>
+                <td><input type="text" name="phonenum"></td>
+            </tr>
+        </table>
+        <input type="submit" onclick="showdone(this)" value="Submit!">   
+        <input type="reset" onclick="showreset(this)" value="Reset!">
+        </form></center>
+    </body>
+</html>

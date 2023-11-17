@@ -1,0 +1,47 @@
+/* Style the header with a grey background and some padding */
+.header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  overflow: hidden;
+  background-color: #b07c7c;
+  padding: 20px 10px;
+  z-index: 1000; /* Ensure the header appears above other elements */
+}
+
+/* Style the header links and logo */
+.header a, .header a.logo {
+  display: inline-block;
+  color: black;
+  text-align: center;
+  padding: 12px;
+  text-decoration: none;
+  font-size: 18px;
+  line-height: 25px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+/* Style the logo link */
+.header a.logo {
+  font-size: 25px;
+  font-weight: bold;
+}
+
+/* Change the background color on mouse-over */
+.header a:hover {
+  background-color: #b44343;
+  color: black;
+}
+
+/* Style the active/current link */
+.header a.active {
+  background-color: rgb(102, 57, 48);
+  color: white;
+}
+
+/* Float the link section to the right */
+.header-right {
+  float: right;
+}
+
