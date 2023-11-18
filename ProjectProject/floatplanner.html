@@ -1,0 +1,66 @@
+<html>
+<head>
+    <title>Kofi | Floating Light Roast Coffee</title>
+    <link rel="icon" href = "kofi.jpg" type = image/png>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="font.css">
+    <link rel="stylesheet" href="coffeepage.css">
+</head>
+<body>
+    <div class="header">
+        <a href="Main2.0.html"><img src="kofi.jpg" alt="logo" width="35px" height="35px"></a>
+        <div class="header-right">
+            <a href="Main2.0.html">Home</a>
+            <a class="active" href="Coffee.html">Coffee</a>
+            <a href="AboutUs.html">About</a>
+            <a href="Contact.html">Contact</a>
+            <a href="kart.html"><img src="shoppingcart.png" width="35" height="35"></a>
+            <a href="signuppage.html"><img src="profile2.png" width="35" height="35"></a>
+        </div>
+    </div>
+    <main>
+        <div class = picture>
+            <img src="coffeebag.jpg" width = 500px height="500px" align = left>
+        </div>
+        <div class="coffeefloat" id="coffeefloat">
+        <h3>Floating Light Roast Coffee</h3>
+        <p>RM34.99</p>
+        <br>
+        <p><b>Ratings</b></p>
+        <p>☕☕☕☕</p>
+        <br>
+        <p><i>Feel the heaven in earth when drinking this coffee. Showing traces of sweetness and softness.</i></p>
+        <br>
+        <p><b>Tasting Notes</b></p>
+        <p>Berries, Brown Sugar</p>
+        <br>    
+        <p><b>100% Arabica Coffee</b></p>
+        <br><br>
+        <label for="quantityfloat"><b>Quantity:</b></label>
+        <input type="number" id="quantityfloat" min="0" value="0">
+        <button onclick="atc('Floating Light Roast Coffee' , 34.99)">Add to Cart!</button>
+        </div>
+    </main>
+    <br><br><br><br>    
+    <div class="bottombox">
+    <h3>Coffee Origin</h3>
+    <br>
+    <p>Guatemala</p> 
+    <br>
+    <h3>How to Brew?</h3>
+    <br>
+    <p>Aeropress, Pour Over</p></div>
+
+    <script>
+        function atc(productid, price) {
+            var quantity = parseInt(document.getElementById("quantityfloat").value);
+            var total = price * quantity;
+
+            sessionStorage.setItem(productid, JSON.stringify({ quantity: quantity, total: total }));
+
+            alert("Product added To Cart Successfully!");
+        }
+    </script>
+</body>
+</html>
