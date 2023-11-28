@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <title>Tutorial 19</title>
+    <link rel=icon href=arisuu.gif type=image/gif>
+    <meta name=viewport content=width=device-width, initial-scale=1.0>
+
+    </head>
+    <script>
+        function arisName() {
+            var arisnname = document.getElementById("arisname");
+            if (arisnname.value == "Aris" || arisnname.value =="Aris Tendou" || arisnname.value =="Alice" || arisnname.value =="aris")
+            {
+                alert("Good job! She is a character from Blue Archive!");
+            }
+            else
+            {
+                alert("Nonono, her name is not "+ arisnname.value + ". You can try again!") ;
+            }
+        }
+
+        function minoriName() {
+            var minorichibi = document.getElementById("Minori")
+            if (minorichibi.value == "Minori" || minorichibi.value == "Hanasato Minori" || minorichibi.value == "minori" || minorichibi.value == "花里みのり")
+            {
+                alert("Good Job! She is a character from Project Sekai!");
+            }
+            else
+            {
+                alert("Nonono, Her name is not "+ minorichibi.value + ".You can try again!");
+            }
+        }
+        
+    </script>
+    <style>
+        body {
+            background-color: #33AAEE;
+        }
+    </style>
+    <body>
+        <center>
+        <h1 align="center">Who is this Character?</h1>
+        <img src="arisuu.gif">
+        <p>Answer Here: </p>
+        <input type="text" id="arisname" onchange="arisName()">
+        <br><br><br><br><br>
+        <h2>Now This One</h2>
+        <img src="minorichibi.jpg">
+        <p>Answer Here: </p>
+        <input type="text" id="Minori" onchange="minoriName()">
+        <br><br>
+        </center>
+    </body>
+    </html>
