@@ -55,10 +55,15 @@
         function atc(productid, price) {
             var quantity = parseInt(document.getElementById("quantitychill").value);
             var total = price * quantity;
-
-            sessionStorage.setItem(productid, JSON.stringify({ quantity: quantity, total: total }));
-
-            alert("Product added To Cart Successfully!");
+            if(quantity <= 0)
+            {
+                alert("Please enter at least one");
+            }
+            else
+            {
+                sessionStorage.setItem(productid, JSON.stringify({ quantity: quantity, total: total }));
+                alert("Product added To Cart Successfully!");
+            }
         }
     </script>
 </body>
