@@ -190,9 +190,9 @@ class Obstacle {
     this.size = 50;
     this.type = type;
     if (this.type === 'block') {
-      this.y = height - this.size + 25; // Ensure block touches the ground
+      this.y = height - this.size + 25; 
     } else if (this.type === 'spike') {
-      this.y = height; // Ensure spike touches the ground
+      this.y = height; 
     }
   }
 
