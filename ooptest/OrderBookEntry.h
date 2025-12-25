@@ -2,7 +2,7 @@
 
 #include <string>
 
-enum class OrderBookType{bid, ask, unknown, asksale, bidsale};
+enum class OrderBookType{bid, ask, unknown, asksale, bidsale, deposit, withdrawal};
 
 class OrderBookEntry
 {
