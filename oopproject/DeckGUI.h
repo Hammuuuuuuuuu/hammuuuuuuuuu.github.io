@@ -18,13 +18,13 @@
 /*
 */
 class DeckGUI    : public Component,
-                   public Button::Listener, 
-                   public Slider::Listener, 
-                   public FileDragAndDropTarget, 
+                   public Button::Listener,
+                   public Slider::Listener,
+                   public FileDragAndDropTarget,
                    public Timer
 {
 public:
-    DeckGUI(DJAudioPlayer* player, 
+    DeckGUI(DJAudioPlayer* player,
            AudioFormatManager & 	formatManagerToUse,
            AudioThumbnailCache & 	cacheToUse );
     ~DeckGUI();
@@ -39,9 +39,11 @@ public:
     void sliderValueChanged (Slider *slider) override;
 
     bool isInterestedInFileDrag (const StringArray &files) override;
-    void filesDropped (const StringArray &files, int x, int y) override; 
+    void filesDropped (const StringArray &files, int x, int y) override;
 
-    void timerCallback() override; 
+    void timerCallback() override;
+
+    void loadFile(File f);
 
 private:
     juce::FileChooser fChooser{"Select a file..."};
@@ -49,14 +51,15 @@ private:
     TextButton playButton{"PLAY"};
     TextButton stopButton{"STOP"};
     TextButton loadButton{"LOAD"};
-  
-    Slider volSlider; 
+
+    Slider volSlider;
     Slider speedSlider;
     Slider posSlider;
+    Slider filterSlider;
 
     WaveformDisplay waveformDisplay;
 
-    DJAudioPlayer* player; 
+    DJAudioPlayer* player;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DeckGUI)
 };

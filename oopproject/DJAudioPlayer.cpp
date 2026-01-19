@@ -10,7 +10,7 @@ Author:  matthew
 
 #include "DJAudioPlayer.h"
 
-DJAudioPlayer::DJAudioPlayer(AudioFormatManager& _formatManager) 
+DJAudioPlayer::DJAudioPlayer(AudioFormatManager& _formatManager)
 : formatManager(_formatManager)
 {
 
@@ -20,31 +20,35 @@ DJAudioPlayer::~DJAudioPlayer()
 
 }
 
-void DJAudioPlayer::prepareToPlay (int samplesPerBlockExpected, double sampleRate) 
+void DJAudioPlayer::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
+    currentSampleRate = sampleRate;
     transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
     resampleSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
+    filterSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
+
+    setFilter(currentFilterCutoff);
 }
 void DJAudioPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
-    resampleSource.getNextAudioBlock(bufferToFill);
-
+    filterSource.getNextAudioBlock(bufferToFill);
 }
 void DJAudioPlayer::releaseResources()
 {
     transportSource.releaseResources();
     resampleSource.releaseResources();
+    filterSource.releaseResources();
 }
 
 void DJAudioPlayer::loadURL(URL audioURL)
 {
     auto* reader = formatManager.createReaderFor(audioURL.createInputStream(false));
     if (reader != nullptr) // good file!
-    {       
-        std::unique_ptr<AudioFormatReaderSource> newSource (new AudioFormatReaderSource (reader, 
-true)); 
-        transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);             
-        readerSource.reset (newSource.release());          
+    {
+        std::unique_ptr<AudioFormatReaderSource> newSource (new AudioFormatReaderSource (reader,
+true));
+        transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);
+        readerSource.reset (newSource.release());
     }
 }
 void DJAudioPlayer::setGain(double gain)
@@ -56,7 +60,7 @@ void DJAudioPlayer::setGain(double gain)
     else {
         transportSource.setGain(gain);
     }
-   
+
 }
 void DJAudioPlayer::setSpeed(double ratio)
 {
@@ -98,4 +102,17 @@ void DJAudioPlayer::stop()
 double DJAudioPlayer::getPositionRelative()
 {
     return transportSource.getCurrentPosition() / transportSource.getLengthInSeconds();
+}
+
+void DJAudioPlayer::setFilter(double cutoff)
+{
+    currentFilterCutoff = cutoff;
+    if (currentSampleRate > 0)
+    {
+        // Map 0.0-1.0 to sensible frequency range, e.g., 500Hz to 20000Hz
+        // If cutoff is 1.0, we want essentially no filtering (or very high cutoff).
+        // If cutoff is 0.0, we want heavy filtering.
+        double freq = 500.0 + cutoff * 19500.0;
+        filterSource.setCoefficients(IIRCoefficients::makeLowPass(currentSampleRate, freq));
+    }
 }

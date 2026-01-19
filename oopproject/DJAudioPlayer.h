@@ -27,7 +27,7 @@ class DJAudioPlayer : public AudioSource {
     void setSpeed(double ratio);
     void setPosition(double posInSecs);
     void setPositionRelative(double pos);
-    
+
 
     void start();
     void stop();
@@ -35,14 +35,16 @@ class DJAudioPlayer : public AudioSource {
     /** get the relative position of the playhead */
     double getPositionRelative();
 
+    /** set the filter (low pass) cutoff */
+    void setFilter(double cutoff);
+
 private:
     AudioFormatManager& formatManager;
     std::unique_ptr<AudioFormatReaderSource> readerSource;
-    AudioTransportSource transportSource; 
+    AudioTransportSource transportSource;
     ResamplingAudioSource resampleSource{&transportSource, false, 2};
+    IIRFilterAudioSource filterSource{&resampleSource, false};
 
+    double currentSampleRate = 0;
+    double currentFilterCutoff = 1.0;
 };
-
-
-
-
