@@ -16,12 +16,14 @@ DeckGUI::DeckGUI(DJAudioPlayer* _player,
                 AudioFormatManager & 	formatManagerToUse,
                 AudioThumbnailCache & 	cacheToUse
            ) : player(_player),
-               waveformDisplay(formatManagerToUse, cacheToUse)
+               waveformDisplay(formatManagerToUse, cacheToUse),
+               turntableComponent(_player)
 {
 
     addAndMakeVisible(playButton);
     addAndMakeVisible(stopButton);
     addAndMakeVisible(loadButton);
+    addAndMakeVisible(loopButton);
 
     addAndMakeVisible(volSlider);
     addAndMakeVisible(speedSlider);
@@ -29,11 +31,13 @@ DeckGUI::DeckGUI(DJAudioPlayer* _player,
     addAndMakeVisible(filterSlider);
 
     addAndMakeVisible(waveformDisplay);
+    addAndMakeVisible(turntableComponent);
 
 
     playButton.addListener(this);
     stopButton.addListener(this);
     loadButton.addListener(this);
+    loopButton.addListener(this);
 
     volSlider.addListener(this);
     speedSlider.addListener(this);
@@ -93,33 +97,39 @@ void DeckGUI::paint (Graphics& g)
 void DeckGUI::resized()
 {
     // Layout:
-    // Top: Waveform (1/3 height)
-    // Middle: Controls (1/3 height)
-    // Bottom: Buttons (1/3 height)
+    // Row 1: Waveform (top, 20%)
+    // Row 2: Turntable (Large central feature, 50%)
+    // Row 3: Controls (Filter, Speed, Vol)
+    // Row 4: Buttons
 
-    double rowH = getHeight() / 3;
+    double h = getHeight();
+    double w = getWidth();
 
-    waveformDisplay.setBounds(0, 0, getWidth(), rowH);
+    double waveformH = h * 0.15;
+    double turntableH = h * 0.45;
+    double controlsH = h * 0.25;
+    double buttonsH = h * 0.15;
 
-    // Middle row: Filter, Speed, Volume
-    double colW = getWidth() / 3;
-    filterSlider.setBounds(0, rowH, colW, rowH);
-    speedSlider.setBounds(colW, rowH, colW, rowH);
-    volSlider.setBounds(colW * 2, rowH, colW, rowH);
+    waveformDisplay.setBounds(0, 0, w, waveformH);
+    posSlider.setBounds(0, waveformH, w, 20); // Overlay or just below
 
-    // Bottom row: Play, Stop, Load, Pos
-    // Wait, Pos slider should be near waveform.
-    posSlider.setBounds(0, rowH - 20, getWidth(), 20); // Overlay on bottom of waveform?
-    // Or just below it.
+    // Turntable
+    turntableComponent.setBounds(0, waveformH + 20, w, turntableH - 20);
 
-    // Let's adjust.
-    double buttonH = rowH / 2;
-    playButton.setBounds(0, rowH * 2, colW, buttonH);
-    stopButton.setBounds(colW, rowH * 2, colW, buttonH);
-    loadButton.setBounds(colW * 2, rowH * 2, colW, buttonH);
+    // Controls
+    double colW = w / 3;
+    double controlsY = waveformH + turntableH;
+    filterSlider.setBounds(0, controlsY, colW, controlsH);
+    speedSlider.setBounds(colW, controlsY, colW, controlsH);
+    volSlider.setBounds(colW * 2, controlsY, colW, controlsH);
 
-    // Position slider at the very bottom
-    posSlider.setBounds(0, rowH * 2 + buttonH, getWidth(), buttonH);
+    // Buttons
+    double buttonsY = controlsY + controlsH;
+    double btnW = w / 4;
+    playButton.setBounds(0, buttonsY, btnW, buttonsH);
+    stopButton.setBounds(btnW, buttonsY, btnW, buttonsH);
+    loopButton.setBounds(btnW * 2, buttonsY, btnW, buttonsH);
+    loadButton.setBounds(btnW * 3, buttonsY, btnW, buttonsH);
 }
 
 void DeckGUI::buttonClicked(Button* button)
@@ -132,6 +142,10 @@ void DeckGUI::buttonClicked(Button* button)
     {
         player->stop();
 
+    }
+    if (button == &loopButton)
+    {
+        player->setLooping(loopButton.getToggleState());
     }
     if (button == &loadButton)
     {

@@ -13,6 +13,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "DJAudioPlayer.h"
 #include "WaveformDisplay.h"
+#include "TurntableComponent.h"
 
 //==============================================================================
 /*
@@ -51,6 +52,7 @@ private:
     TextButton playButton{"PLAY"};
     TextButton stopButton{"STOP"};
     TextButton loadButton{"LOAD"};
+    ToggleButton loopButton{"LOOP"};
 
     Slider volSlider;
     Slider speedSlider;
@@ -58,6 +60,7 @@ private:
     Slider filterSlider;
 
     WaveformDisplay waveformDisplay;
+    TurntableComponent turntableComponent;
 
     DJAudioPlayer* player;
 

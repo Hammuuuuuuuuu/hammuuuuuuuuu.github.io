@@ -31,12 +31,17 @@ class DJAudioPlayer : public AudioSource {
 
     void start();
     void stop();
+    bool isPlaying();
 
     /** get the relative position of the playhead */
     double getPositionRelative();
 
     /** set the filter (low pass) cutoff */
     void setFilter(double cutoff);
+
+    /** toggle looping */
+    void setLooping(bool shouldLoop);
+    bool isLooping();
 
 private:
     AudioFormatManager& formatManager;
@@ -47,4 +52,6 @@ private:
 
     double currentSampleRate = 0;
     double currentFilterCutoff = 1.0;
+
+    bool isLoopingState = false;
 };

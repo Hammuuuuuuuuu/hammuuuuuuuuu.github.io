@@ -47,6 +47,9 @@ void DJAudioPlayer::loadURL(URL audioURL)
     {
         std::unique_ptr<AudioFormatReaderSource> newSource (new AudioFormatReaderSource (reader,
 true));
+        // Important: Preserve loop state if already set, or re-apply it.
+        if (isLoopingState) newSource->setLooping(true);
+
         transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);
         readerSource.reset (newSource.release());
     }
@@ -99,9 +102,16 @@ void DJAudioPlayer::stop()
   transportSource.stop();
 }
 
+bool DJAudioPlayer::isPlaying()
+{
+    return transportSource.isPlaying();
+}
+
 double DJAudioPlayer::getPositionRelative()
 {
-    return transportSource.getCurrentPosition() / transportSource.getLengthInSeconds();
+    if (transportSource.getLengthInSeconds() > 0)
+        return transportSource.getCurrentPosition() / transportSource.getLengthInSeconds();
+    return 0;
 }
 
 void DJAudioPlayer::setFilter(double cutoff)
@@ -115,4 +125,18 @@ void DJAudioPlayer::setFilter(double cutoff)
         double freq = 500.0 + cutoff * 19500.0;
         filterSource.setCoefficients(IIRCoefficients::makeLowPass(currentSampleRate, freq));
     }
+}
+
+void DJAudioPlayer::setLooping(bool shouldLoop)
+{
+    isLoopingState = shouldLoop;
+    if (readerSource)
+    {
+        readerSource->setLooping(shouldLoop);
+    }
+}
+
+bool DJAudioPlayer::isLooping()
+{
+    return isLoopingState;
 }
