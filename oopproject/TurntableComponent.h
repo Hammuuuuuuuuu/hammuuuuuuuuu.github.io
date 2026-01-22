@@ -32,13 +32,16 @@ public:
 
     void timerCallback() override;
 
+    void loadAlbumArt(File imageFile);
+
 private:
     DJAudioPlayer* player;
     double rotationAngle = 0.0;
-    bool isPlaying = false;
     bool isScratching = false;
 
     float lastMouseAngle = 0.0f;
+
+    Image albumArt;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TurntableComponent)
 };

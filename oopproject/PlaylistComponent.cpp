@@ -23,6 +23,7 @@ PlaylistComponent::PlaylistComponent(DeckGUI* _deck1, DeckGUI* _deck2, AudioForm
     searchBox.addListener(this);
 
     tableComponent.getHeader().addColumn("Track title", 1, 200);
+    tableComponent.getHeader().addColumn("Artist", 4, 150);
     tableComponent.getHeader().addColumn("", 2, 100); // Load Deck 1
     tableComponent.getHeader().addColumn("", 3, 100); // Load Deck 2
     tableComponent.setModel(this);
@@ -56,7 +57,7 @@ void PlaylistComponent::resized()
 
 int PlaylistComponent::getNumRows()
 {
-    return filteredFiles.size();
+    return filteredIndices.size();
 }
 
 void PlaylistComponent::paintRowBackground (Graphics& g, int rowNumber, int width, int height, bool rowIsSelected)
@@ -73,13 +74,20 @@ void PlaylistComponent::paintRowBackground (Graphics& g, int rowNumber, int widt
 
 void PlaylistComponent::paintCell (Graphics& g, int rowNumber, int columnId, int width, int height, bool rowIsSelected)
 {
-    if (rowNumber < filteredFiles.size())
+    if (rowNumber < filteredIndices.size())
     {
-        if (columnId == 1)
+        int index = filteredIndices[rowNumber];
+        TrackInfo& track = tracks[index];
+
+        if (columnId == 1) // Title
         {
-            g.drawText(filteredFiles[rowNumber].getFileName(),
+            g.drawText(track.title,
                        2, 0, width - 4, height,
                        Justification::centredLeft, true);
+        }
+        else if (columnId == 4) // Artist
+        {
+             g.drawText(track.artist, 2, 0, width - 4, height, Justification::centredLeft, true);
         }
     }
 }
@@ -129,10 +137,30 @@ void PlaylistComponent::buttonClicked(Button* button)
             {
                 for (auto file : files)
                 {
-                    trackFiles.push_back(file);
+                    TrackInfo track{file};
+
+                    // Parse Metadata
+                    std::unique_ptr<AudioFormatReader> reader(formatManager.createReaderFor(file));
+                    if (reader)
+                    {
+                        String artist = reader->metadataValues["artist"];
+                        String title = reader->metadataValues["title"];
+
+                        if (artist.isNotEmpty()) track.artist = artist;
+                        if (title.isNotEmpty()) track.title = title;
+
+                        // Fallback for ID3 if standard keys fail
+                        if (track.artist == "Unknown" && reader->metadataValues.containsKey("id3artist"))
+                             track.artist = reader->metadataValues["id3artist"];
+                        if (track.title == track.file.getFileNameWithoutExtension() && reader->metadataValues.containsKey("id3title"))
+                             track.title = reader->metadataValues["id3title"];
+                    }
+
+                    tracks.push_back(track);
                 }
                 textEditorTextChanged(searchBox);
                 tableComponent.updateContent();
+                saveLibrary();
             }
         });
     }
@@ -142,14 +170,16 @@ void PlaylistComponent::buttonClicked(Button* button)
         if (id.startsWith("2_"))
         {
             int row = id.substring(2).getIntValue();
-            if (row < filteredFiles.size())
-                deck1->loadFile(filteredFiles[row]);
+            if (row < filteredIndices.size()){
+                deck1->loadFile(tracks[filteredIndices[row]].file);
+            }
         }
         else if (id.startsWith("3_"))
         {
             int row = id.substring(2).getIntValue();
-             if (row < filteredFiles.size())
-                deck2->loadFile(filteredFiles[row]);
+             if (row < filteredIndices.size()){
+                deck2->loadFile(tracks[filteredIndices[row]].file);
+             }
         }
     }
 }
@@ -157,20 +187,13 @@ void PlaylistComponent::buttonClicked(Button* button)
 void PlaylistComponent::textEditorTextChanged(TextEditor& editor)
 {
     String searchText = editor.getText();
-    filteredFiles.clear();
+    filteredIndices.clear();
 
-    if (searchText.isEmpty())
+    for (int i=0; i < tracks.size(); ++i)
     {
-        filteredFiles = trackFiles;
-    }
-    else
-    {
-        for (auto& file : trackFiles)
+        if (searchText.isEmpty() || tracks[i].title.containsIgnoreCase(searchText) || tracks[i].artist.containsIgnoreCase(searchText))
         {
-            if (file.getFileName().containsIgnoreCase(searchText))
-            {
-                filteredFiles.push_back(file);
-            }
+            filteredIndices.push_back(i);
         }
     }
     tableComponent.updateContent();
@@ -181,6 +204,8 @@ void PlaylistComponent::loadLibrary()
     // Load from text file
     std::ifstream file("playlist_library.txt");
     std::string str;
+    tracks.clear();
+
     if (file.is_open())
     {
         while (std::getline(file, str))
@@ -188,12 +213,12 @@ void PlaylistComponent::loadLibrary()
             File f{String(str)};
             if (f.existsAsFile())
             {
-                trackFiles.push_back(f);
+                tracks.push_back(TrackInfo{f});
             }
         }
     }
-    // Initialize filtered list
-    filteredFiles = trackFiles;
+    // Refresh indices
+    textEditorTextChanged(searchBox);
 }
 
 void PlaylistComponent::saveLibrary()
@@ -202,9 +227,9 @@ void PlaylistComponent::saveLibrary()
     std::ofstream file("playlist_library.txt");
     if (file.is_open())
     {
-        for (auto& f : trackFiles)
+        for (auto& t : tracks)
         {
-            file << f.getFullPathName().toStdString() << "\n";
+            file << t.file.getFullPathName().toStdString() << "\n";
         }
     }
 }

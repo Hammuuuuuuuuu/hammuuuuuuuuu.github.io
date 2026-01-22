@@ -14,6 +14,7 @@
 #include <vector>
 #include <string>
 #include "DeckGUI.h"
+#include "TrackInfo.h"
 
 //==============================================================================
 /*
@@ -44,8 +45,10 @@ public:
 
 private:
     TableListBox tableComponent;
-    std::vector<File> trackFiles;
-    std::vector<File> filteredFiles; // For search
+    std::vector<TrackInfo> tracks;
+
+    // Helper to filter
+    std::vector<int> filteredIndices;
 
     TextButton importButton{"IMPORT"};
     TextEditor searchBox;

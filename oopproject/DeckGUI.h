@@ -54,10 +54,25 @@ private:
     TextButton loadButton{"LOAD"};
     ToggleButton loopButton{"LOOP"};
 
+    // Beat Loop Buttons
+    TextButton loop1Btn{"1/2"}; // 1/2 Beat (assuming 120bpm = 0.25s)
+    TextButton loop2Btn{"1"};   // 1 Beat (0.5s)
+    TextButton loop3Btn{"4"};   // 4 Beats (2.0s)
+
+    // Cue Buttons
+    TextButton cue1Btn{"1"};
+    TextButton cue2Btn{"2"};
+    TextButton cue3Btn{"3"};
+
+    // Sliders
     Slider volSlider;
     Slider speedSlider;
     Slider posSlider;
-    Slider filterSlider;
+
+    // EQ Sliders
+    Slider lowSlider;
+    Slider midSlider;
+    Slider highSlider;
 
     WaveformDisplay waveformDisplay;
     TurntableComponent turntableComponent;
