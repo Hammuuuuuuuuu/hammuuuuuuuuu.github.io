@@ -11,11 +11,12 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include <functional>
 
 //==============================================================================
 /*
 */
-class WaveformDisplay    : public Component, 
+class WaveformDisplay    : public Component,
                            public ChangeListener
 {
 public:
@@ -33,10 +34,18 @@ public:
     /** set the relative position of the playhead*/
     void setPositionRelative(double pos);
 
+    void mouseDown(const MouseEvent& event) override;
+
+    std::function<void(double)> onPositionChanged;
+
+    void setColour(Colour c) { waveformColour = c; }
+
 private:
     AudioThumbnail audioThumb;
-    bool fileLoaded; 
+    bool fileLoaded;
     double position;
-    
+
+    Colour waveformColour = Colours::orange;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WaveformDisplay)
 };

@@ -12,8 +12,8 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "DJAudioPlayer.h"
-#include "WaveformDisplay.h"
 #include "TurntableComponent.h"
+#include "WaveformDisplay.h"
 
 //==============================================================================
 /*
@@ -22,7 +22,7 @@ class DeckGUI    : public Component,
                    public Button::Listener,
                    public Slider::Listener,
                    public FileDragAndDropTarget,
-                   public Timer
+                   public DragAndDropTarget
 {
 public:
     DeckGUI(DJAudioPlayer* player,
@@ -42,42 +42,40 @@ public:
     bool isInterestedInFileDrag (const StringArray &files) override;
     void filesDropped (const StringArray &files, int x, int y) override;
 
-    void timerCallback() override;
+    // DragAndDropTarget
+    bool isInterestedInDragSource (const SourceDetails& dragSourceDetails) override;
+    void itemDropped (const SourceDetails& dragSourceDetails) override;
 
     void loadFile(File f);
 
+    // Listener Interface
+    class Listener
+    {
+    public:
+        virtual ~Listener() {}
+        virtual void fileLoaded(DeckGUI* deck, URL audioURL) = 0;
+    };
+
+    void addListener(Listener* l) { listeners.add(l); }
+    void removeListener(Listener* l) { listeners.remove(l); }
+
 private:
-    juce::FileChooser fChooser{"Select a file..."};
+    ListenerList<Listener> listeners;
 
     TextButton playButton{"PLAY"};
     TextButton stopButton{"STOP"};
     TextButton loadButton{"LOAD"};
-    ToggleButton loopButton{"LOOP"};
 
-    // Beat Loop Buttons
-    TextButton loop1Btn{"1/2"}; // 1/2 Beat (assuming 120bpm = 0.25s)
-    TextButton loop2Btn{"1"};   // 1 Beat (0.5s)
-    TextButton loop3Btn{"4"};   // 4 Beats (2.0s)
-
-    // Cue Buttons
-    TextButton cue1Btn{"1"};
-    TextButton cue2Btn{"2"};
-    TextButton cue3Btn{"3"};
-
-    // Sliders
     Slider volSlider;
     Slider speedSlider;
-    Slider posSlider;
 
-    // EQ Sliders
-    Slider lowSlider;
-    Slider midSlider;
-    Slider highSlider;
+    Label trackNameLabel;
 
-    WaveformDisplay waveformDisplay;
-    TurntableComponent turntableComponent;
+    TurntableComponent turntable; // R3 Custom Graphic
 
     DJAudioPlayer* player;
+
+    juce::FileChooser fChooser{"Select a file..."};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DeckGUI)
 };

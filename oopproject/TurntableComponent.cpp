@@ -25,7 +25,7 @@ void TurntableComponent::paint (Graphics& g)
 {
     auto bounds = getLocalBounds().toFloat();
     auto center = bounds.getCentre();
-    float radius = jmin(bounds.getWidth(), bounds.getHeight()) / 2.0f - 10.0f;
+    float radius = jmin(bounds.getWidth(), bounds.getHeight()) / 2.0f - 5.0f;
 
     // Draw Vinyl Disk
     g.setColour(Colours::black);
@@ -38,45 +38,27 @@ void TurntableComponent::paint (Graphics& g)
         g.drawEllipse(center.x - r, center.y - r, r * 2, r * 2, 1.0f);
     }
 
-    // Draw Label / Album Art (Center)
+    // Draw Label
     float labelRadius = radius * 0.35f;
+    g.setColour(Colours::red);
+    g.fillEllipse(center.x - labelRadius, center.y - labelRadius, labelRadius * 2, labelRadius * 2);
 
-    // We rotate the context around the center for the label too
+    // Rotate context
     g.saveState();
     AffineTransform transform = AffineTransform::rotation(rotationAngle, center.x, center.y);
     g.addTransform(transform);
 
-    if (albumArt.isValid())
-    {
-         // Clip to circle
-         Path clipPath;
-         clipPath.addEllipse(center.x - labelRadius, center.y - labelRadius, labelRadius * 2, labelRadius * 2);
-         g.reduceClipRegion(clipPath);
-         g.drawImage(albumArt, center.x - labelRadius, center.y - labelRadius, labelRadius * 2, labelRadius * 2,
-                     0, 0, albumArt.getWidth(), albumArt.getHeight());
-    }
-    else
-    {
-        g.setColour(Colours::red);
-        g.fillEllipse(center.x - labelRadius, center.y - labelRadius, labelRadius * 2, labelRadius * 2);
-
-        // Text on label
-        g.setColour(Colours::white);
-        g.setFont(12.0f);
-        g.drawText("VINYL", center.x - 20, center.y - 10, 40, 20, Justification::centred);
-    }
-
-    // Restore for Spindle (which shouldn't rotate visually, it's just a dot)
-    // Actually spindle rotates with the platter but it's a solid color circle so it looks same.
-    // But the white marker needs to rotate.
-
-    // Draw Marker (to visualize rotation)
+    // Text on label
     g.setColour(Colours::white);
-    g.fillRect(center.x - 2, center.y - radius + 10, 4.0f, radius * 0.3f); // White strip on the edge
+    g.setFont(12.0f);
+    g.drawText("OTO", center.x - 20, center.y - 10, 40, 20, Justification::centred);
+
+    // Marker
+    g.fillRect(center.x - 2, center.y - radius + 5, 4.0f, radius * 0.3f);
 
     g.restoreState();
 
-    // Draw Spindle (Static relative to chassis? No, usually spins. But let's draw it last so it covers the hole)
+    // Spindle
     g.setColour(Colours::silver);
     g.fillEllipse(center.x - 5, center.y - 5, 10, 10);
 }
@@ -85,71 +67,14 @@ void TurntableComponent::resized()
 {
 }
 
-void TurntableComponent::mouseDown(const MouseEvent& event)
-{
-    isScratching = true;
-    lastMouseAngle = event.position.getAngleToPoint(getLocalBounds().getCentre().toFloat());
-}
-
-void TurntableComponent::mouseDrag(const MouseEvent& event)
-{
-    if (isScratching)
-    {
-        float currentAngle = event.position.getAngleToPoint(getLocalBounds().getCentre().toFloat());
-        float delta = currentAngle - lastMouseAngle;
-
-        // Handle wrap-around (e.g. going from PI to -PI)
-        if (delta > MathConstants<float>::pi) delta -= MathConstants<float>::twoPi;
-        if (delta < -MathConstants<float>::pi) delta += MathConstants<float>::twoPi;
-
-        rotationAngle += delta;
-        lastMouseAngle = currentAngle;
-
-        // Convert rotation to seek
-        double currentPos = player->getPositionRelative();
-        double seekAmt = delta / (MathConstants<float>::twoPi * 10.0); // Sensitivity
-
-        double newPos = currentPos + seekAmt;
-        if (newPos < 0) newPos = 0;
-        if (newPos > 1) newPos = 1;
-
-        player->setPositionRelative(newPos);
-
-        repaint();
-    }
-}
-
-void TurntableComponent::mouseUp(const MouseEvent& event)
-{
-    isScratching = false;
-}
-
 void TurntableComponent::timerCallback()
 {
-    static double lastPos = -1.0;
-    double currentPos = player->getPositionRelative();
-
-    if (currentPos != lastPos && !isScratching)
+    if (player->isPlaying())
     {
-        // It's playing
         rotationAngle += 0.1;
         if (rotationAngle > MathConstants<double>::twoPi)
             rotationAngle -= MathConstants<double>::twoPi;
 
-        repaint();
-    }
-    lastPos = currentPos;
-}
-
-void TurntableComponent::loadAlbumArt(File imageFile)
-{
-    if (imageFile.existsAsFile())
-    {
-        albumArt = ImageFileFormat::loadFrom(imageFile);
-        repaint();
-    }
-    else {
-        albumArt = Image::null;
         repaint();
     }
 }

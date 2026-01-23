@@ -1,7 +1,9 @@
 /*
   ==============================================================================
 
-    This file was auto-generated!
+    MainComponent.cpp
+    Created: 21 Jan 2025
+    Author:  Jules
 
   ==============================================================================
 */
@@ -11,11 +13,8 @@
 //==============================================================================
 MainComponent::MainComponent()
 {
-    // Make sure you set the size of the component after
-    // you add any child components.
-    setSize (1000, 800);
+    setSize (1024, 768);
 
-    // Some platforms require permissions to open input channels so request that here
     if (RuntimePermissions::isRequired (RuntimePermissions::recordAudio)
         && ! RuntimePermissions::isGranted (RuntimePermissions::recordAudio))
     {
@@ -24,25 +23,40 @@ MainComponent::MainComponent()
     }
     else
     {
-        // Specify the number of input and output channels that we want to open
         setAudioChannels (0, 2);
     }
 
+    // Region A: Visualisation
+    addAndMakeVisible(waveform1);
+    addAndMakeVisible(waveform2);
+
+    waveform1.setColour(Colours::cyan);
+    waveform2.setColour(Colours::orange);
+
+    // Region B: Mixing Console
     addAndMakeVisible(deckGUI1);
+    addAndMakeVisible(mixer);
     addAndMakeVisible(deckGUI2);
+
+    // Region C: Library
     addAndMakeVisible(playlistComponent);
 
-    addKeyListener(this);
-    setWantsKeyboardFocus(true);
-
-
     formatManager.registerBasicFormats();
+
+    deckGUI1.addListener(this);
+    deckGUI2.addListener(this);
+
+    startTimer(50);
+
+    // Connect waveform interactions
+    waveform1.onPositionChanged = [this](double pos) { player1.setPositionRelative(pos); };
+    waveform2.onPositionChanged = [this](double pos) { player2.setPositionRelative(pos); };
 }
 
 MainComponent::~MainComponent()
 {
-    // This shuts down the audio device and clears the audio source.
     shutdownAudio();
+    stopTimer();
 }
 
 //==============================================================================
@@ -64,10 +78,6 @@ void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
 
 void MainComponent::releaseResources()
 {
-    // This will be called when the audio device stops, or when it is being
-    // restarted due to a setting change.
-
-    // For more details, see the help for AudioProcessor::releaseResources()
     player1.releaseResources();
     player2.releaseResources();
     mixerSource.releaseResources();
@@ -76,38 +86,51 @@ void MainComponent::releaseResources()
 //==============================================================================
 void MainComponent::paint (Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (Colours::purple); // Customized colour
-
-    // You can add your drawing code here!
+    g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
 }
 
 void MainComponent::resized()
 {
-    deckGUI1.setBounds(0, 0, getWidth()/2, getHeight() * 0.4);
-    deckGUI2.setBounds(getWidth()/2, 0, getWidth()/2, getHeight() * 0.4);
+    double w = getWidth();
+    double h = getHeight();
 
-    playlistComponent.setBounds(0, getHeight() * 0.4, getWidth(), getHeight() * 0.6);
+    // A. Top Region (20%)
+    double topH = h * 0.2;
+    waveform1.setBounds(0, 0, w/2, topH);
+    waveform2.setBounds(w/2, 0, w/2, topH);
 
+    // B. Middle Region (40%)
+    double midH = h * 0.4;
+    double midY = topH;
+
+    // Layout: Deck 1 | Mixer | Deck 2
+    double deckW = w * 0.35;
+    double mixerW = w * 0.30;
+
+    deckGUI1.setBounds(0, midY, deckW, midH);
+    mixer.setBounds(deckW, midY, mixerW, midH);
+    deckGUI2.setBounds(deckW + mixerW, midY, deckW, midH);
+
+    // C. Bottom Region (40%)
+    double botH = h * 0.4;
+    double botY = midY + midH;
+    playlistComponent.setBounds(0, botY, w, botH);
 }
 
-bool MainComponent::keyPressed (const KeyPress &key, Component *originatingComponent)
+void MainComponent::fileLoaded(DeckGUI* deck, URL audioURL)
 {
-    if (key.getTextCharacter() == '1')
+    if (deck == &deckGUI1)
     {
-        player1.start();
+        waveform1.loadURL(audioURL);
     }
-    else if (key.getTextCharacter() == '2')
+    if (deck == &deckGUI2)
     {
-        player2.start();
+        waveform2.loadURL(audioURL);
     }
-    else if (key.getTextCharacter() == 'q')
-    {
-        player1.stop();
-    }
-    else if (key.getTextCharacter() == 'w')
-    {
-        player2.stop();
-    }
-    return true;
+}
+
+void MainComponent::timerCallback()
+{
+    waveform1.setPositionRelative(player1.getPositionRelative());
+    waveform2.setPositionRelative(player2.getPositionRelative());
 }
