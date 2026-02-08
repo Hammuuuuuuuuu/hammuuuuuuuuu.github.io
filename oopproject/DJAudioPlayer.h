@@ -40,6 +40,23 @@ class DJAudioPlayer : public AudioSource {
     void setEQ(double high, double mid, double low);
     void setCrossfadeFactor(double factor);
 
+    /** toggle looping */
+    void setLooping(bool shouldLoop);
+    bool isLooping();
+
+    /** Hot Cues */
+    void setCue(int index);
+    void jumpToCue(int index);
+    bool hasCue(int index);
+    void clearCue(int index);
+
+    /** Beat Loop: Set loop range starting now with duration */
+    void setBeatLoop(double durationSeconds);
+
+    /** BPM Functions */
+    double getBPM();
+    void setBaseBPM(double bpm);
+
 private:
     AudioFormatManager& formatManager;
     std::unique_ptr<AudioFormatReaderSource> readerSource;
@@ -60,4 +77,17 @@ private:
     double eqGainLow = 1.0;
     double eqGainMid = 1.0;
     double eqGainHigh = 1.0;
+
+    bool isLoopingState = false;
+
+    double hotCues[3] = {-1.0, -1.0, -1.0};
+
+    // Manual Looping
+    bool isBeatLooping = false;
+    double loopStart = 0.0;
+    double loopDuration = 0.0;
+
+    // BPM
+    double baseBPM = 120.0;
+    double currentSpeedRatio = 1.0;
 };

@@ -36,6 +36,15 @@ void DJAudioPlayer::prepareToPlay (int samplesPerBlockExpected, double sampleRat
 }
 void DJAudioPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
+    if (isBeatLooping)
+    {
+        double currentPos = transportSource.getCurrentPosition();
+        if (currentPos >= loopStart + loopDuration)
+        {
+            transportSource.setPosition(loopStart);
+        }
+    }
+
     // Get samples
     resampleSource.getNextAudioBlock(bufferToFill);
 
@@ -62,8 +71,30 @@ void DJAudioPlayer::loadURL(URL audioURL)
     {
         std::unique_ptr<AudioFormatReaderSource> newSource (new AudioFormatReaderSource (reader,
 true));
+
+        // Try to parse BPM from metadata
+        String bpmStr = reader->metadataValues["bpm"];
+        if (bpmStr.isEmpty()) bpmStr = reader->metadataValues["tempo"];
+        if (bpmStr.isEmpty() && reader->metadataValues.containsKey("id3bpm")) bpmStr = reader->metadataValues["id3bpm"];
+
+        if (bpmStr.isNotEmpty())
+        {
+            baseBPM = bpmStr.getDoubleValue();
+            if (baseBPM <= 0) baseBPM = 120.0; // Fallback
+        }
+        else
+        {
+            baseBPM = 120.0; // Default
+        }
+
+        // Important: Preserve loop state if already set, or re-apply it.
+        if (isLoopingState) newSource->setLooping(true);
+
         transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);
         readerSource.reset (newSource.release());
+
+        // Reset Cues on load
+        for(int i=0; i<3; ++i) hotCues[i] = -1.0;
     }
 }
 void DJAudioPlayer::setGain(double gain)
@@ -80,7 +111,8 @@ void DJAudioPlayer::setCrossfadeFactor(double factor)
 
 void DJAudioPlayer::setSpeed(double ratio)
 {
-  if (ratio < 0 || ratio > 100.0)
+    currentSpeedRatio = ratio;
+    if (ratio < 0 || ratio > 100.0)
     {
         std::cout << "DJAudioPlayer::setSpeed ratio should be between 0 and 100" << std::endl;
     }
@@ -145,4 +177,72 @@ void DJAudioPlayer::setEQ(double high, double mid, double low)
             highFilters[i].setCoefficients(highCoeffs);
         }
     }
+}
+
+void DJAudioPlayer::setLooping(bool shouldLoop)
+{
+    isLoopingState = shouldLoop;
+    if (readerSource)
+    {
+        readerSource->setLooping(shouldLoop);
+    }
+}
+
+bool DJAudioPlayer::isLooping()
+{
+    return isLoopingState;
+}
+
+void DJAudioPlayer::setCue(int index)
+{
+    if (index >= 0 && index < 3)
+    {
+        hotCues[index] = transportSource.getCurrentPosition();
+    }
+}
+
+void DJAudioPlayer::jumpToCue(int index)
+{
+    if (index >= 0 && index < 3 && hotCues[index] >= 0)
+    {
+        transportSource.setPosition(hotCues[index]);
+    }
+}
+
+bool DJAudioPlayer::hasCue(int index)
+{
+    return (index >= 0 && index < 3 && hotCues[index] >= 0);
+}
+
+void DJAudioPlayer::clearCue(int index)
+{
+    if (index >= 0 && index < 3)
+    {
+        hotCues[index] = -1.0;
+    }
+}
+
+void DJAudioPlayer::setBeatLoop(double durationSeconds)
+{
+    if (durationSeconds <= 0)
+    {
+        isBeatLooping = false;
+        return;
+    }
+
+    loopStart = transportSource.getCurrentPosition();
+    loopDuration = durationSeconds;
+    isBeatLooping = true;
+
+    std::cout << "Looping: " << durationSeconds << "s" << std::endl;
+}
+
+double DJAudioPlayer::getBPM()
+{
+    return baseBPM * currentSpeedRatio;
+}
+
+void DJAudioPlayer::setBaseBPM(double bpm)
+{
+    if (bpm > 0) baseBPM = bpm;
 }

@@ -14,6 +14,7 @@
 #include "DJAudioPlayer.h"
 #include "TurntableComponent.h"
 #include "WaveformDisplay.h"
+#include <vector>
 
 //==============================================================================
 /*
@@ -59,12 +60,19 @@ public:
     void addListener(Listener* l) { listeners.add(l); }
     void removeListener(Listener* l) { listeners.remove(l); }
 
+    void updateBPM();
+
 private:
     ListenerList<Listener> listeners;
 
     TextButton playButton{"PLAY"};
     TextButton stopButton{"STOP"};
     TextButton loadButton{"LOAD"};
+
+    // BPM Controls
+    Label bpmLabel;
+    TextButton tapButton{"TAP"};
+    std::vector<int64> tapTimes; // Timestamps in ms
 
     Slider volSlider;
     Slider speedSlider;

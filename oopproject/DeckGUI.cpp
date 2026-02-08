@@ -22,16 +22,19 @@ DeckGUI::DeckGUI(DJAudioPlayer* _player,
     addAndMakeVisible(playButton);
     addAndMakeVisible(stopButton);
     addAndMakeVisible(loadButton);
+    addAndMakeVisible(tapButton);
 
     addAndMakeVisible(volSlider);
     addAndMakeVisible(speedSlider);
 
     addAndMakeVisible(trackNameLabel);
     addAndMakeVisible(turntable);
+    addAndMakeVisible(bpmLabel);
 
     playButton.addListener(this);
     stopButton.addListener(this);
     loadButton.addListener(this);
+    tapButton.addListener(this);
 
     volSlider.addListener(this);
     speedSlider.addListener(this);
@@ -51,6 +54,10 @@ DeckGUI::DeckGUI(DJAudioPlayer* _player,
 
     trackNameLabel.setText("No Track Loaded", dontSendNotification);
     trackNameLabel.setJustificationType(Justification::centred);
+
+    bpmLabel.setText("BPM: 120.0", dontSendNotification);
+    bpmLabel.setJustificationType(Justification::centred);
+    bpmLabel.setColour(Label::textColourId, Colours::lightgreen);
 }
 
 DeckGUI::~DeckGUI()
@@ -72,19 +79,23 @@ void DeckGUI::resized()
     double w = getWidth();
     double h = getHeight();
 
-    // Top 60%: Turntable
-    turntable.setBounds(0, 0, w, h * 0.6);
+    // Top 50%: Turntable
+    turntable.setBounds(0, 0, w, h * 0.5);
 
-    // Remaining 40%
-    double controlsY = h * 0.6;
-    double controlsH = h * 0.4;
+    // Remaining 50%
+    double controlsY = h * 0.5;
+    double controlsH = h * 0.5;
 
     // Track Label
     trackNameLabel.setBounds(0, controlsY, w, 20);
 
+    // BPM Display
+    bpmLabel.setBounds(0, controlsY + 20, w * 0.7, 20);
+    tapButton.setBounds(w * 0.7, controlsY + 20, w * 0.3, 20);
+
     // Sliders: Speed (Left), Vol (Right)
-    double sliderY = controlsY + 20;
-    double sliderH = controlsH - 50; // Leave space for buttons
+    double sliderY = controlsY + 45;
+    double sliderH = controlsH - 75; // Leave space for buttons
     speedSlider.setBounds(0, sliderY, w/2, sliderH);
     volSlider.setBounds(w/2, sliderY, w/2, sliderH);
 
@@ -119,6 +130,35 @@ void DeckGUI::buttonClicked(Button* button)
             }
         });
     }
+    if (button == &tapButton)
+    {
+        int64 now = Time::currentTimeMillis();
+
+        // Clear old taps (> 2 seconds ago) to reset sequence
+        if (!tapTimes.empty() && (now - tapTimes.back() > 2000))
+        {
+            tapTimes.clear();
+        }
+
+        tapTimes.push_back(now);
+
+        // Keep max 4
+        if (tapTimes.size() > 4) tapTimes.erase(tapTimes.begin());
+
+        if (tapTimes.size() > 1)
+        {
+            double averageInterval = 0;
+            for (size_t i = 1; i < tapTimes.size(); ++i)
+            {
+                averageInterval += (double)(tapTimes[i] - tapTimes[i-1]);
+            }
+            averageInterval /= (double)(tapTimes.size() - 1);
+
+            double bpm = 60000.0 / averageInterval;
+            player->setBaseBPM(bpm);
+            updateBPM();
+        }
+    }
 }
 
 void DeckGUI::sliderValueChanged (Slider *slider)
@@ -131,7 +171,14 @@ void DeckGUI::sliderValueChanged (Slider *slider)
     if (slider == &speedSlider)
     {
         player->setSpeed(slider->getValue());
+        updateBPM();
     }
+}
+
+void DeckGUI::updateBPM()
+{
+    double bpm = player->getBPM();
+    bpmLabel.setText("BPM: " + String(bpm, 1), dontSendNotification);
 }
 
 bool DeckGUI::isInterestedInFileDrag (const StringArray &files)
@@ -168,6 +215,7 @@ void DeckGUI::loadFile(File f)
     URL url{f};
     player->loadURL(url);
     trackNameLabel.setText(f.getFileNameWithoutExtension(), dontSendNotification);
+    updateBPM();
 
     // Notify listeners
     listeners.call([this, url](Listener& l){ l.fileLoaded(this, url); });
