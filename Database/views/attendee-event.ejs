@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><%= event.title %></title>
+</head>
+<body>
+    <h1><%= event.title %></h1>
+    <p><strong>Date:</strong> <%= event.event_date %></p>
+    <p><%= event.description %></p>
+
+    <hr>
+    <h3>Book Your Tickets</h3>
+    <p>Available Tickets:</p>
+    <ul>
+        <li>Full Price: <%= event.full_price_tickets_total - event.full_price_tickets_sold %> left (£<%= event.full_price_tickets_price %>)</li>
+        <li>Concession: <%= event.concession_tickets_total - event.concession_tickets_sold %> left (£<%= event.concession_tickets_price %>)</li>
+    </ul>
+
+    <form action="/attendee/book/<%= event.event_id %>" method="POST">
+        <div>
+            <label for="attendee_name">Your Name:</label>
+            <input type="text" id="attendee_name" name="attendee_name" required>
+        </div>
+        <div>
+            <label for="full_price_quantity">Full Price Tickets:</label>
+            <input type="number" id="full_price_quantity" name="full_price_quantity" value="0" min="0" max="<%= event.full_price_tickets_total - event.full_price_tickets_sold %>" required>
+        </div>
+        <div>
+            <label for="concession_quantity">Concession Tickets:</label>
+            <input type="number" id="concession_quantity" name="concession_quantity" value="0" min="0" max="<%= event.concession_tickets_total - event.concession_tickets_sold %>" required>
+        </div>
+        <br>
+        <button type="submit">Book Now</button>
+    </form>
+
+    <br>
+    <a href="/attendee">Back to Events List</a>
+</body>
+</html>

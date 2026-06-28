@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Site Settings</title>
+</head>
+<body>
+    <h1>Site Settings</h1>
+    <form action="/organiser/settings" method="POST">
+        <div>
+            <label for="site_name">Site Name:</label>
+            <input type="text" id="site_name" name="site_name" value="<%= settings.site_name %>" required>
+        </div>
+        <div>
+            <label for="site_description">Site Description:</label>
+            <textarea id="site_description" name="site_description" required><%= settings.site_description %></textarea>
+        </div>
+        <button type="submit">Update Settings</button>
+    </form>
+    <br>
+    <a href="/organiser">Back to Organiser Home</a>
+</body>
+</html>

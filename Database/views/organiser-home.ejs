@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Organiser Home</title>
+</head>
+<body>
+    <h1>Organiser Home Page</h1>
+    <h2>Site Settings: <%= settings.site_name %></h2>
+    <p><%= settings.site_description %></p>
+    <nav>
+        <a href="/organiser/settings">Site Settings</a> |
+        <a href="/">Back to Main Home</a>
+    </nav>
+    <br>
+    <form action="/organiser/create-event" method="POST">
+        <button type="submit">Create New Event</button>
+    </form>
+
+    <section>
+        <h3>Published Events</h3>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Event Date</th>
+                    <th>Created</th>
+                    <th>Published</th>
+                    <th>Tickets (Full/Concession)</th>
+                    <th>Sharing Link</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% publishedEvents.forEach(event => { %>
+                    <tr>
+                        <td><%= event.title %></td>
+                        <td><%= event.event_date %></td>
+                        <td><%= event.created_at %></td>
+                        <td><%= event.published_at %></td>
+                        <td>
+                            Full: <%= event.full_price_tickets_sold %>/<%= event.full_price_tickets_total %><br>
+                            Conc: <%= event.concession_tickets_sold %>/<%= event.concession_tickets_total %>
+                        </td>
+                        <td><a href="/attendee/event/<%= event.event_id %>">Link</a></td>
+                        <td>
+                            <form action="/organiser/delete/<%= event.event_id %>" method="POST" onsubmit="return confirm('Delete this event?');">
+                                <button type="submit">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h3>Draft Events</h3>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% draftEvents.forEach(event => { %>
+                    <tr>
+                        <td><%= event.title %></td>
+                        <td>
+                            <a href="/organiser/edit/<%= event.event_id %>">Edit</a>
+                            <form action="/organiser/publish/<%= event.event_id %>" method="POST" style="display:inline;">
+                                <button type="submit">Publish</button>
+                            </form>
+                            <form action="/organiser/delete/<%= event.event_id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete this event?');">
+                                <button type="submit">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </section>
+</body>
+</html>
