@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Attendee Home</title>
+</head>
+<body>
+    <h1>Welcome to <%= settings.site_name %></h1>
+    <p><%= settings.site_description %></p>
+    <nav>
+        <a href="/">Back to Main Home</a>
+    </nav>
+    <br>
+    <section>
+        <h3>Upcoming Events</h3>
+        <ul>
+            <% events.forEach(event => { %>
+                <li>
+                    <a href="/attendee/event/<%= event.event_id %>">
+                        <strong><%= event.title %></strong> - <%= event.event_date %>
+                    </a>
+                </li>
+            <% }); %>
+        </ul>
+    </section>
+</body>
+</html>

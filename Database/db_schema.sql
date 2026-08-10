@@ -4,31 +4,43 @@ PRAGMA foreign_keys=ON;
 
 BEGIN TRANSACTION;
 
--- Create your tables with SQL commands here (watch out for slight syntactical differences with SQLite vs MySQL)
-
-CREATE TABLE IF NOT EXISTS users (
-    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_name TEXT NOT NULL
+-- Settings table to store site name and description
+CREATE TABLE IF NOT EXISTS settings (
+    setting_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    site_name TEXT NOT NULL,
+    site_description TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS email_accounts (
-    email_account_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email_address TEXT NOT NULL,
-    user_id  INT, --the user that the email account belongs to
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
+-- Events table to store event details, state, and ticket info
+CREATE TABLE IF NOT EXISTS events (
+    event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT,
+    event_date DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_modified_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    published_at DATETIME,
+    is_published INTEGER DEFAULT 0, -- 0 for draft, 1 for published
+    full_price_tickets_total INTEGER DEFAULT 0,
+    full_price_tickets_sold INTEGER DEFAULT 0,
+    full_price_tickets_price REAL DEFAULT 0.0,
+    concession_tickets_total INTEGER DEFAULT 0,
+    concession_tickets_sold INTEGER DEFAULT 0,
+    concession_tickets_price REAL DEFAULT 0.0
 );
 
--- Insert default data (if necessary here)
+-- Bookings table to store attendee registrations
+CREATE TABLE IF NOT EXISTS bookings (
+    booking_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id INTEGER NOT NULL,
+    attendee_name TEXT NOT NULL,
+    full_price_tickets_quantity INTEGER DEFAULT 0,
+    concession_tickets_quantity INTEGER DEFAULT 0,
+    booking_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (event_id) REFERENCES events(event_id) ON DELETE CASCADE
+);
 
--- Set up three users
-INSERT INTO users ('user_name') VALUES ('Simon Star');
-INSERT INTO users ('user_name') VALUES ('Dianne Dean');
-INSERT INTO users ('user_name') VALUES ('Harry Hilbert');
-
--- Give Simon two email addresses and Diane one, but Harry has none
-INSERT INTO email_accounts ('email_address', 'user_id') VALUES ('simon@gmail.com', 1); 
-INSERT INTO email_accounts ('email_address', 'user_id') VALUES ('simon@hotmail.com', 1); 
-INSERT INTO email_accounts ('email_address', 'user_id') VALUES ('dianne@yahoo.co.uk', 2); 
+-- Insert default site settings
+INSERT INTO settings (site_name, site_description) VALUES ('Event Manager', 'Welcome to our event management system.');
 
 COMMIT;
-
