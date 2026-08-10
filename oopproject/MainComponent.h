@@ -1,7 +1,9 @@
 /*
   ==============================================================================
 
-    This file was auto-generated!
+    MainComponent.h
+    Created: 21 Jan 2025
+    Author:  Jules
 
   ==============================================================================
 */
@@ -11,14 +13,19 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "DJAudioPlayer.h"
 #include "DeckGUI.h"
-
+#include "MixerComponent.h"
+#include "PlaylistComponent.h"
+#include "WaveformDisplay.h"
 
 //==============================================================================
 /*
     This component lives inside our window, and this is where you should put all
     your controls and content.
 */
-class MainComponent   : public AudioAppComponent
+class MainComponent   : public AudioAppComponent,
+                        public DeckGUI::Listener,
+                        public Timer,
+                        public DragAndDropContainer
 {
 public:
     //==============================================================================
@@ -34,21 +41,32 @@ public:
     void paint (Graphics& g) override;
     void resized() override;
 
+    // DeckGUI::Listener
+    void fileLoaded(DeckGUI* deck, URL audioURL) override;
+
+    // Timer
+    void timerCallback() override;
+
 private:
     //==============================================================================
-    // Your private member variables go here...
-     
     AudioFormatManager formatManager;
-    AudioThumbnailCache thumbCache{100}; 
+    AudioThumbnailCache thumbCache{100};
 
     DJAudioPlayer player1{formatManager};
-    DeckGUI deckGUI1{&player1, formatManager, thumbCache}; 
-
     DJAudioPlayer player2{formatManager};
-    DeckGUI deckGUI2{&player2, formatManager, thumbCache}; 
 
-    MixerAudioSource mixerSource; 
-    
-    
+    MixerAudioSource mixerSource;
+
+    // Components
+    WaveformDisplay waveform1{formatManager, thumbCache};
+    WaveformDisplay waveform2{formatManager, thumbCache};
+
+    DeckGUI deckGUI1{&player1, formatManager, thumbCache};
+    DeckGUI deckGUI2{&player2, formatManager, thumbCache};
+
+    MixerComponent mixer{&player1, &player2};
+
+    PlaylistComponent playlistComponent{formatManager};
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

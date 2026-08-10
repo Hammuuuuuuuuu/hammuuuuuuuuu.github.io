@@ -12,19 +12,21 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "DJAudioPlayer.h"
+#include "TurntableComponent.h"
 #include "WaveformDisplay.h"
+#include <vector>
 
 //==============================================================================
 /*
 */
 class DeckGUI    : public Component,
-                   public Button::Listener, 
-                   public Slider::Listener, 
-                   public FileDragAndDropTarget, 
-                   public Timer
+                   public Button::Listener,
+                   public Slider::Listener,
+                   public FileDragAndDropTarget,
+                   public DragAndDropTarget
 {
 public:
-    DeckGUI(DJAudioPlayer* player, 
+    DeckGUI(DJAudioPlayer* player,
            AudioFormatManager & 	formatManagerToUse,
            AudioThumbnailCache & 	cacheToUse );
     ~DeckGUI();
@@ -39,24 +41,49 @@ public:
     void sliderValueChanged (Slider *slider) override;
 
     bool isInterestedInFileDrag (const StringArray &files) override;
-    void filesDropped (const StringArray &files, int x, int y) override; 
+    void filesDropped (const StringArray &files, int x, int y) override;
 
-    void timerCallback() override; 
+    // DragAndDropTarget
+    bool isInterestedInDragSource (const SourceDetails& dragSourceDetails) override;
+    void itemDropped (const SourceDetails& dragSourceDetails) override;
+
+    void loadFile(File f);
+
+    // Listener Interface
+    class Listener
+    {
+    public:
+        virtual ~Listener() {}
+        virtual void fileLoaded(DeckGUI* deck, URL audioURL) = 0;
+    };
+
+    void addListener(Listener* l) { listeners.add(l); }
+    void removeListener(Listener* l) { listeners.remove(l); }
+
+    void updateBPM();
 
 private:
-    juce::FileChooser fChooser{"Select a file..."};
+    ListenerList<Listener> listeners;
 
     TextButton playButton{"PLAY"};
     TextButton stopButton{"STOP"};
     TextButton loadButton{"LOAD"};
-  
-    Slider volSlider; 
+
+    // BPM Controls
+    Label bpmLabel;
+    TextButton tapButton{"TAP"};
+    std::vector<int64> tapTimes; // Timestamps in ms
+
+    Slider volSlider;
     Slider speedSlider;
-    Slider posSlider;
 
-    WaveformDisplay waveformDisplay;
+    Label trackNameLabel;
 
-    DJAudioPlayer* player; 
+    TurntableComponent turntable; // R3 Custom Graphic
+
+    DJAudioPlayer* player;
+
+    juce::FileChooser fChooser{"Select a file..."};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DeckGUI)
 };
