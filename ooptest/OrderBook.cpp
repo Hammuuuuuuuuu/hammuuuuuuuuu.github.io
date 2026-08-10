@@ -214,3 +214,35 @@ std::vector<OrderBookEntry> OrderBook::matchAsksToBids(std::string product, std:
     }
     return sales;             
 }
+
+std::vector<Candlestick> OrderBook::computeCandlesticks(std::string product, OrderBookType type)
+{
+    std::vector<Candlestick> candles;
+    std::map<std::string, std::vector<double>> timeframePrices;
+
+    for (OrderBookEntry& e : orders)
+    {
+        if (e.product == product && e.orderType == type)
+        {
+            timeframePrices[e.timestamp].push_back(e.price);
+        }
+    }
+
+    for (auto const& [timestamp, prices] : timeframePrices)
+    {
+        double open = prices.front();
+        double close = prices.back();
+        double high = prices[0];
+        double low = prices[0];
+
+        for (double p : prices)
+        {
+            if (p > high) high = p;
+            if (p < low) low = p;
+        }
+
+        candles.emplace_back(timestamp, open, high, low, close, product, type);
+    }
+
+    return candles;
+}

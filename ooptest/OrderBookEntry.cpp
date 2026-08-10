@@ -27,5 +27,10 @@ OrderBookType OrderBookEntry::stringToOrderBookType(std::string s)
   {
     return OrderBookType::bid;
   }
+  if (s == "asksale") return OrderBookType::asksale;
+  if (s == "bidsale") return OrderBookType::bidsale;
+  if (s == "deposit") return OrderBookType::deposit;
+  if (s == "withdrawal") return OrderBookType::withdrawal;
+
   return OrderBookType::unknown;
 }

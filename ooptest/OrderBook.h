@@ -1,6 +1,7 @@
 #pragma once
 #include "OrderBookEntry.h"
 #include "CSVReader.h"
+#include "Candlestick.h"
 #include <string>
 #include <vector>
 
@@ -15,6 +16,9 @@ class OrderBook
         std::vector<OrderBookEntry> getOrders(OrderBookType type, 
                                               std::string product, 
                                               std::string timestamp);
+
+    /** returns vector of Candlesticks for a product and type across all timeframes */
+        std::vector<Candlestick> computeCandlesticks(std::string product, OrderBookType type);
 
         /** returns the earliest time in the orderbook*/
         std::string getEarliestTime();
