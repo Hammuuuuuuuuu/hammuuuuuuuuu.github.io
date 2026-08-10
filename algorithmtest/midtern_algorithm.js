@@ -1,173 +1,186 @@
 /** allows the program to receive i/o */
 const readline = require("readline");
 
-class Stack {
-    constructor() {
-        this.items = [];
-    }
+// --- Stack Functions ---
+function createStack() {
+    return [];
+}
 
-    push(x) {
-        this.items.unshift(x);
-    }
+function push(stack, x) {
+    stack.push(x);
+}
 
-    pop() {
-        if (this.items.length === 0) {
-            throw new Error("Stack underflow");
-        }
-        return this.items.shift();
+function pop(stack) {
+    if (stack.length === 0) {
+        throw new Error("Stack underflow");
     }
+    return stack.pop();
+}
 
-    clear() {
-        this.items = [];
-    }
+function clearStack(stack) {
+    stack.length = 0;
+}
 
-    peek() {
-        return this.items[0];
-    }
+function peek(stack) {
+    return stack[stack.length - 1];
+}
 
-    isEmpty() {
-        return this.items.length === 0;
+function isStackEmpty(stack) {
+    return stack.length === 0;
+}
+
+// --- Symbol Table Functions ---
+function createSymbolTable(size = 26) {
+    // Array of buckets, though for A-Z, direct indexing is possible.
+    // We'll stick to the logic of bucket array for generic structure compliance,
+    // but optimized for A-Z.
+    return Array.from({ length: size }, () => []);
+}
+
+function hash(key) {
+    return key.charCodeAt(0) - 65;
+}
+
+function validateKey(key) {
+    if (typeof key !== "string" || key.length !== 1 || key < "A" || key > "Z") {
+        throw new Error("Variable name must be a single letter A–Z");
     }
 }
 
-class SymbolTable {
-    constructor(size = 26) {
-        this.size = size;
-        this.table = Array.from({ length: size }, () => []);
+function insert(table, key, value) {
+    validateKey(key);
+    const index = hash(key);
+
+    for (let entry of table[index]) {
+        if (entry.key === key) {
+            entry.value = value;
+            return;
+        }
     }
 
-    hash(key) {
-        return key.charCodeAt(0) - 65;
-    }
-
-    insert(key, value) {
-        if (typeof key !== "string" || key.length !== 1 || key < "A" || key > "Z") {
-            throw new Error("Variable name must be a single letter A–Z");
-        }
-
-        const index = this.hash(key);
-
-        for (let entry of this.table[index]) {
-            if (entry.key === key) {
-                entry.value = value;
-                return;
-            }
-        }
-
-        this.table[index].push({ key, value });
-    }
-
-
-        search(key) {
-        if (typeof key !== "string" || key.length !== 1 || key < "A" || key > "Z") {
-            throw new Error("Variable name must be a single letter A–Z");
-        }
-
-        const index = this.hash(key);
-
-        for (let entry of this.table[index]) {
-            if (entry.key === key) {
-                return entry.value;
-            }
-        }
-
-        throw new Error(`Variable ${key} not found`);
-    }
-
-    delete(key) {
-        if (typeof key !== "string" || key.length !== 1 || key < "A" || key > "Z") {
-            throw new Error("Variable name must be a single letter A–Z");
-        }
-
-        const index = this.hash(key);
-        this.table[index] = this.table[index].filter(e => e.key !== key);
-    }
+    table[index].push({ key, value });
 }
 
-class PostfixInterpreter {
-    constructor() {
-        this.stack = new Stack();
-        this.symbolTable = new SymbolTable();
-    }
+function search(table, key) {
+    validateKey(key);
+    const index = hash(key);
 
-    isOperator(token) {
-        return ["+", "-", "*", "/"].includes(token);
-    }
-
-    applyOperator(op, a, b) {
-        switch (op) {
-            case "+": return a + b;
-            case "-": return a - b;
-            case "*": return a * b;
-            case "/": return Math.floor(a / b);
+    for (let entry of table[index]) {
+        if (entry.key === key) {
+            return entry.value;
         }
     }
 
-    evaluate(line) {
+    throw new Error(`Variable ${key} not found`);
+}
+
+function remove(table, key) {
+    validateKey(key);
+    const index = hash(key);
+    table[index] = table[index].filter(e => e.key !== key);
+}
+
+// --- Interpreter Functions ---
+
+function isBinaryOperator(token) {
+    return ["+", "-", "*", "/", "%", "^"].includes(token);
+}
+
+function isUnaryOperator(token) {
+    return ["sqrt", "cube", "log"].includes(token);
+}
+
+function resolveValue(val, table) {
+    if (typeof val === "string") {
+        return search(table, val);
+    }
+    return val;
+}
+
+function evaluate(line, stack, table) {
     try {
         const tokens = line.trim().split(/\s+/);
 
         for (let token of tokens) {
+            if (!token) continue;
+
             if (!isNaN(token)) {
-                this.stack.push(parseInt(token));
-            } 
-            else if (token >= "A" && token <= "Z") {
-                // Push variable name for now
-                this.stack.push(token);
-            } 
-            else if (this.isOperator(token)) {
-                let b = this.stack.pop();
-                let a = this.stack.pop();
+                // Parse float to support sqrt, log, etc.
+                push(stack, parseFloat(token));
+            }
+            else if (token.length === 1 && token >= "A" && token <= "Z") {
+                // Push variable name
+                push(stack, token);
+            }
+            else if (isBinaryOperator(token)) {
+                let b = pop(stack);
+                let a = pop(stack);
 
-                if (typeof a === "string") {
-                    a = this.symbolTable.search(a);
-                }
-                if (typeof b === "string") {
-                    b = this.symbolTable.search(b);
-                }
+                a = resolveValue(a, table);
+                b = resolveValue(b, table);
 
-                this.stack.push(this.applyOperator(token, a, b));
-            } 
+                let res;
+                switch (token) {
+                    case "+": res = a + b; break;
+                    case "-": res = a - b; break;
+                    case "*": res = a * b; break;
+                    case "/": res = a / b; break; // Floating point division
+                    case "%": res = a % b; break;
+                    case "^": res = Math.pow(a, b); break;
+                }
+                push(stack, res);
+            }
+            else if (isUnaryOperator(token)) {
+                let a = pop(stack);
+                a = resolveValue(a, table);
+
+                let res;
+                switch (token) {
+                    case "sqrt": res = Math.sqrt(a); break;
+                    case "cube": res = Math.pow(a, 3); break;
+                    case "log": res = Math.log(a); break; // Natural log
+                }
+                push(stack, res);
+            }
             else if (token === "=") {
-                const value = this.stack.pop();
-                const variable = this.stack.pop();
+                const value = pop(stack);
+                const variable = pop(stack);
 
                 if (typeof variable !== "string") {
                     throw new Error("Assignment requires a variable name");
                 }
 
-                this.symbolTable.insert(variable, value);
-                console.log(`${variable} = ${value}`);
+                // Value might be a variable name too? E.g. A B =
+                const resolvedValue = resolveValue(value, table);
+
+                insert(table, variable, resolvedValue);
+                console.log(`${variable} = ${resolvedValue}`);
             }
             else {
                 throw new Error(`Invalid token: ${token}`);
             }
         }
 
-        if (!this.stack.isEmpty()) {
-            let result = this.stack.peek();
-            if (typeof result === "string") {
-                result = this.symbolTable.search(result);
-            }
+        if (!isStackEmpty(stack)) {
+            let result = peek(stack);
+            result = resolveValue(result, table);
             console.log("Result:", result);
+            return result; // Return for testing
         }
-
 
     } catch (error) {
         console.log("Error:", error.message);
+        throw error; // Re-throw for testing if needed, but in CLI loop it's caught
     } finally {
-        // Always clear stack after each line
-        this.stack.clear();
-        }   
+        clearStack(stack);
     }
 }
 
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
+// --- Main Execution ---
 
-const interpreter = new PostfixInterpreter();
+// Initialize shared state
+const globalStack = createStack();
+const globalSymbolTable = createSymbolTable();
 
 function showMenu() {
     console.log("\nWelcome to Postfix++ Calculator Menu");
@@ -177,46 +190,78 @@ function showMenu() {
     console.log("4. EXIT");
 }
 
-function promptUser() {
+function promptUser(rl) {
     showMenu();
     rl.question("Choose an option: ", choice => {
         try {
             if (choice === "1") {
-            rl.question("Enter Postfix expression: ", expr => {
-                interpreter.evaluate(expr);
-                promptUser();
-            });
+                rl.question("Enter Postfix expression: ", expr => {
+                    // We catch here to not crash the loop
+                    try {
+                        evaluate(expr, globalStack, globalSymbolTable);
+                    } catch (e) {
+                         // Error already logged in evaluate usually, or re-thrown
+                    }
+                    promptUser(rl);
+                });
             } else if (choice === "2") {
                 rl.question("Enter variable name: ", v => {
                     try {
-                        console.log("Value:", interpreter.symbolTable.search(v));
+                        console.log("Value:", search(globalSymbolTable, v));
                     } catch (e) {
                         console.log("Error:", e.message);
                     }
-                    promptUser();
+                    promptUser(rl);
                 });
             } else if (choice === "3") {
                 rl.question("Enter variable name to delete: ", v => {
                     try {
-                        interpreter.symbolTable.delete(v);
+                        remove(globalSymbolTable, v);
                         console.log("Variable deleted");
                     } catch (e) {
                         console.log("Error:", e.message);
                     }
-                    promptUser();
+                    promptUser(rl);
                 });
             } else if (choice === "4") {
                 console.log("Exiting...");
                 rl.close();
             } else {
                 console.log("Invalid choice");
-                promptUser();
+                promptUser(rl);
             }
         } catch (e) {
             console.log("Error:", e.message);
-            promptUser();
+            promptUser(rl);
         }
     });
 }
 
-promptUser();
+function main() {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+    promptUser(rl);
+}
+
+// Only run main if this file is executed directly
+if (require.main === module) {
+    main();
+}
+
+// Export functions for testing
+module.exports = {
+    evaluate,
+    createStack,
+    createSymbolTable,
+    insert,
+    search,
+    remove,
+    push,
+    pop,
+    peek,
+    clearStack,
+    isStackEmpty,
+    hash
+};
