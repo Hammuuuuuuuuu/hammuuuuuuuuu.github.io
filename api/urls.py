@@ -33,13 +33,13 @@ urlpatterns = [
         name="restaurant-search",
     ),
     path(
-        "api/v1/countries/stats/",
-        views.country_stats_view,
-        name="country-stats",
+        "api/v1/restaurants/",
+        views.restaurant_list_create_view,
+        name="restaurant-list-create",
     ),
     path(
-        "api/v1/restaurants/create/",
-        views.create_restaurant_view,
-        name="create-restaurant",
+        "api/v1/restaurants/<int:pk>/",
+        views.restaurant_detail_view,
+        name="restaurant-detail",
     ),
 ]

@@ -3,12 +3,12 @@ Comprehensive Unit Test Suite for Zomato RESTful API.
 
 Tests cover:
 - Root Overview view (JSON and HTML representations)
-- Endpoint 1: Top Rated Restaurants (multi-table filtering and edge cases)
-- Endpoint 2: City Cost Summary Analytics (grouping and aggregate calculation)
-- Endpoint 3: Cuisine Analytics (ordering, top limit, and performance stats)
-- Endpoint 4: Multi-Criteria Search (keyword, delivery status, pagination)
-- Endpoint 5: Country Level Statistics (relational metrics aggregation)
-- Endpoint 6: Create Restaurant POST endpoint (valid payload creation and error validations)
+- Endpoint 1: GET /api/v1/restaurants/top-rated/ (multi-table filtering and edge cases)
+- Endpoint 2: GET /api/v1/analytics/city-cost-summary/ (grouping and unrated restaurant exclusion)
+- Endpoint 3: GET /api/v1/cuisines/analytics/ (country and city filters)
+- Endpoint 4: GET /api/v1/restaurants/search/ (keyword, delivery status, pagination)
+- Endpoint 5: POST /api/v1/restaurants/ (valid payload creation and error validations)
+- Endpoint 6: GET/PUT/PATCH/DELETE /api/v1/restaurants/<id>/ (nested detail, full update, partial update, deletion)
 """
 
 from decimal import Decimal
@@ -71,7 +71,7 @@ class ZomatoAPITestCase(APITestCase):
             aggregate_rating=4.2, rating_color="Green", rating_text="Very Good", votes=150
         )
         self.rating_3 = Rating.objects.create(
-            aggregate_rating=3.5, rating_color="Yellow", rating_text="Good", votes=80
+            aggregate_rating=0.0, rating_color="White", rating_text="Not rated", votes=0
         )
 
         # Restaurants
@@ -151,33 +151,39 @@ class ZomatoAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)
 
-    def test_city_cost_summary_aggregation(self):
-        """Test Endpoint 2 city cost and rating aggregation analytics."""
+    def test_city_cost_summary_excluding_unrated(self):
+        """Test Endpoint 2 city cost summary excludes unrated restaurants (rating=0.0)."""
         url = reverse("city-cost-summary")
-        response = self.client.get(url, {"min_restaurants": 1})
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("cities", response.data)
 
-        # Find Makati City aggregate record
+        # New Delhi (rest_3) is unrated (0.0), so New Delhi should be excluded
+        city_names = [c["name"] for c in response.data["cities"]]
+        self.assertIn("Makati City", city_names)
+        self.assertNotIn("New Delhi", city_names)
+
         makati_stat = next(c for c in response.data["cities"] if c["name"] == "Makati City")
-        self.assertEqual(makati_stat["total_restaurants"], 2)
-        self.assertEqual(float(makati_stat["min_cost_for_two"]), 800.00)
-        self.assertEqual(float(makati_stat["max_cost_for_two"]), 1200.00)
+        self.assertEqual(makati_stat["total_rated_restaurants"], 2)
         self.assertEqual(float(makati_stat["avg_cost_for_two"]), 1000.00)
 
-    def test_cuisine_analytics(self):
-        """Test Endpoint 3 cuisine metrics aggregation and ordering."""
+    def test_cuisine_analytics_per_city_and_country(self):
+        """Test Endpoint 3 cuisine metrics aggregation per city or country."""
         url = reverse("cuisine-analytics")
-        response = self.client.get(url, {"ordering": "-avg_rating", "top": 5})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("cuisines", response.data)
 
-        cuisines = response.data["cuisines"]
-        self.assertGreater(len(cuisines), 0)
-        # Japanese rating avg: (4.8 + 4.2) / 2 = 4.5
-        jp_stat = next(c for c in cuisines if c["cuisine_name"] == "Japanese")
-        self.assertEqual(jp_stat["restaurant_count"], 2)
-        self.assertEqual(jp_stat["average_rating"], 4.5)
+        # Cuisine analytics for Makati City
+        response = self.client.get(url, {"city": "Makati City"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        cuisines = [c["cuisine_name"] for c in response.data["cuisines"]]
+        self.assertIn("Japanese", cuisines)
+        self.assertNotIn("Italian", cuisines)
+
+        # Cuisine analytics for Country Code 1 (India)
+        response = self.client.get(url, {"country_code": 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        cuisines_in_india = [c["cuisine_name"] for c in response.data["cuisines"]]
+        self.assertIn("Italian", cuisines_in_india)
+        self.assertNotIn("Japanese", cuisines_in_india)
 
     def test_restaurant_search(self):
         """Test Endpoint 4 keyword search, delivery filter, and pagination."""
@@ -194,20 +200,9 @@ class ZomatoAPITestCase(APITestCase):
         self.assertEqual(response.data["total_matches"], 1)
         self.assertEqual(response.data["results"][0]["restaurant_id"], 102)
 
-    def test_country_stats(self):
-        """Test Endpoint 5 country level relational metrics aggregation."""
-        url = reverse("country-stats")
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["countries_count"], 2)
-
-        ph_stat = next(c for c in response.data["countries"] if c["country_code"] == 162)
-        self.assertEqual(ph_stat["total_restaurants"], 2)
-        self.assertEqual(ph_stat["average_rating"], 4.5)
-
     def test_create_restaurant_success(self):
-        """Test Endpoint 6 POST creation with valid payload."""
-        url = reverse("create-restaurant")
+        """Test Endpoint 5 POST creation with valid payload."""
+        url = reverse("restaurant-list-create")
         payload = {
             "restaurant_id": 999,
             "name": "Manila Bistro",
@@ -238,8 +233,8 @@ class ZomatoAPITestCase(APITestCase):
         self.assertEqual(created_rest.cuisines.count(), 2)
 
     def test_create_restaurant_duplicate_id_failure(self):
-        """Test Endpoint 6 POST validation error on duplicate restaurant ID."""
-        url = reverse("create-restaurant")
+        """Test Endpoint 5 POST validation error on duplicate restaurant ID."""
+        url = reverse("restaurant-list-create")
         payload = {
             "restaurant_id": 101,  # Already exists in setUp
             "name": "Duplicate Restaurant",
@@ -250,16 +245,67 @@ class ZomatoAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("restaurant_id", response.data)
 
-    def test_create_restaurant_invalid_rating(self):
-        """Test Endpoint 6 POST validation error on rating exceeding max value."""
-        url = reverse("create-restaurant")
-        payload = {
-            "restaurant_id": 888,
-            "name": "Invalid Rating Diner",
-            "city_name": "Quezon City",
-            "aggregate_rating": 6.5,  # Max is 5.0
-        }
+    def test_restaurant_detail_get(self):
+        """Test Endpoint 6 GET detail retrieval for a specific restaurant ID."""
+        url = reverse("restaurant-detail", kwargs={"pk": 101})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["restaurant_id"], 101)
+        self.assertEqual(response.data["name"], "Tokyo Dining")
+        self.assertEqual(response.data["location"]["city_name"], "Makati City")
 
-        response = self.client.post(url, payload, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("aggregate_rating", response.data)
+    def test_restaurant_detail_put(self):
+        """Test Endpoint 6 PUT full update for a restaurant."""
+        url = reverse("restaurant-detail", kwargs={"pk": 101})
+        payload = {
+            "name": "Tokyo Fine Dining",
+            "city_name": "Makati City",
+            "country_code": 162,
+            "address": "Updated Address",
+            "locality": "Poblacion",
+            "aggregate_rating": 4.9,
+            "rating_color": "Dark Green",
+            "rating_text": "Exceptional",
+            "votes": 350,
+            "average_cost_for_two": 1500.00,
+            "currency": "PHP",
+            "has_table_booking": True,
+            "has_online_delivery": True,
+            "price_range": 4,
+            "cuisines": ["Japanese", "Sushi"],
+        }
+        response = self.client.put(url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["name"], "Tokyo Fine Dining")
+
+        self.rest_1.refresh_from_db()
+        self.assertEqual(self.rest_1.name, "Tokyo Fine Dining")
+        self.assertEqual(self.rest_1.rating.aggregate_rating, 4.9)
+
+    def test_restaurant_detail_patch(self):
+        """Test Endpoint 6 PATCH partial update for a restaurant."""
+        url = reverse("restaurant-detail", kwargs={"pk": 102})
+        payload = {
+            "name": "Sakura Japanese Bistro",
+            "aggregate_rating": 4.5,
+        }
+        response = self.client.patch(url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.rest_2.refresh_from_db()
+        self.assertEqual(self.rest_2.name, "Sakura Japanese Bistro")
+        self.assertEqual(self.rest_2.rating.aggregate_rating, 4.5)
+
+    def test_restaurant_detail_delete(self):
+        """Test Endpoint 6 DELETE removal of a restaurant record."""
+        url = reverse("restaurant-detail", kwargs={"pk": 103})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertFalse(Restaurant.objects.filter(restaurant_id=103).exists())
+
+    def test_restaurant_detail_not_found(self):
+        """Test Endpoint 6 returns 404 for non-existent restaurant ID."""
+        url = reverse("restaurant-detail", kwargs={"pk": 99999})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

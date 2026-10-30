@@ -1,20 +1,21 @@
 """
 Django REST Framework Views for Zomato Restaurant API.
 
-Includes root overview view and 6 specialized RESTful API endpoints:
+Includes root overview view and the 6 revised RESTful API endpoints:
 1. Root Overview View (`/`): Displays system info, dependencies, admin credentials, and clickable links.
-2. Top-Rated Restaurants (`/api/v1/restaurants/top-rated/`): Multi-table filtering for top-rated restaurants by cuisine, city, and booking features.
-3. City Cost Summary Analytics (`/api/v1/analytics/city-cost-summary/`): Aggregates price and rating metrics per city.
-4. Cuisine Analytics (`/api/v1/cuisines/analytics/`): Complex aggregation calculating popularity, rating, and average cost per cuisine.
-5. Multi-Criteria Restaurant Search (`/api/v1/restaurants/search/`): Dynamic filtering based on name, price range, delivery, and votes.
-6. Country Level Analytics (`/api/v1/countries/stats/`): Relational aggregation across country, city, and restaurant metrics.
-7. Create Restaurant (`/api/v1/restaurants/create/`): POST endpoint validating and persisting new restaurant and relational data.
+2. Top-Rated Restaurants (`/api/v1/restaurants/top-rated/`): Multi-table filtering for top-rated restaurants.
+3. City Cost Summary Analytics (`/api/v1/analytics/city-cost-summary/`): Aggregates price and rating metrics per city (excluding unrated restaurants).
+4. Cuisine Analytics (`/api/v1/cuisines/analytics/`): Calculates popularity and metrics per cuisine filtered by country or city.
+5. Multi-Criteria Restaurant Search (`/api/v1/restaurants/search/`): Dynamic multi-table search with filters and pagination.
+6. Create Restaurant (`/api/v1/restaurants/` POST): Validates and persists new restaurant and relational data.
+7. Restaurant Detail Endpoint (`/api/v1/restaurants/<id>/` GET/PUT/PATCH/DELETE): Nested detail view, full update, partial update, and deletion.
 """
 
 import sys
 import django
 from django.db.models import Avg, Count, Max, Min, Q
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -24,6 +25,7 @@ from api.serializers import (
     CuisineSerializer,
     RestaurantCreateSerializer,
     RestaurantSerializer,
+    RestaurantUpdateSerializer,
 )
 
 
@@ -49,38 +51,37 @@ def root_overview_view(request):
 
     endpoints = [
         {
-            "name": "1. Top Rated Restaurants (Multi-table Filtering)",
+            "name": "1. GET /api/v1/restaurants/top-rated/",
             "url": "/api/v1/restaurants/top-rated/?cuisine=Japanese&city=Makati%20City",
-            "description": "Find top-rated restaurants filtered by cuisine, city, country, and table booking availability.",
+            "description": "Multi-table filtering for top-rated restaurants by cuisine, city, country, and table booking availability.",
         },
         {
-            "name": "2. City Cost & Rating Summary (Aggregation)",
+            "name": "2. GET /api/v1/analytics/city-cost-summary/",
             "url": "/api/v1/analytics/city-cost-summary/?min_restaurants=5",
-            "description": "Aggregates min, max, average cost for two and average rating grouped by city.",
+            "description": "City cost and rating aggregate summary (excluding unrated restaurants).",
         },
         {
-            "name": "3. Cuisine Analytics (Aggregation)",
-            "url": "/api/v1/cuisines/analytics/?top=10&ordering=-avg_rating",
-            "description": "Calculates popularity, average rating, and average cost per cuisine type across all restaurants.",
+            "name": "3. GET /api/v1/cuisines/analytics/",
+            "url": "/api/v1/cuisines/analytics/?city=Makati%20City",
+            "description": "Cuisine analytics filtered by country or city.",
         },
         {
-            "name": "4. Multi-Criteria Restaurant Search",
+            "name": "4. GET /api/v1/restaurants/search/",
             "url": "/api/v1/restaurants/search/?q=Grill&has_delivery=true&min_votes=50",
-            "description": "Search restaurants with flexible keyword, delivery status, price range, and vote threshold filters.",
+            "description": "Multi-criteria search with keyword, online delivery, price range, and vote threshold filters.",
         },
         {
-            "name": "5. Country Level Statistics",
-            "url": "/api/v1/countries/stats/",
-            "description": "Relational aggregation detailing total cities, restaurants, and average ratings grouped by country code.",
-        },
-        {
-            "name": "6. Create Restaurant (POST Endpoint)",
-            "url": "/api/v1/restaurants/create/",
+            "name": "5. POST /api/v1/restaurants/",
+            "url": "/api/v1/restaurants/",
             "description": "POST endpoint to validate and save new restaurant records with relational location and rating.",
+        },
+        {
+            "name": "6. GET/PUT/PATCH/DELETE /api/v1/restaurants/<id>/",
+            "url": "/api/v1/restaurants/6317637/",
+            "description": "Nested detail retrieval, full update (PUT), partial update (PATCH), or deletion (DELETE) for a specific restaurant.",
         },
     ]
 
-    # Check if client expects HTML or JSON
     accept_header = request.META.get("HTTP_ACCEPT", "")
     if "text/html" in accept_header or request.GET.get("format") == "html":
         links_html = "".join(
@@ -189,10 +190,11 @@ def top_rated_restaurants_view(request):
 @api_view(["GET"])
 def city_cost_summary_view(request):
     """
-    Endpoint 2: Complex aggregation summarizing restaurant pricing and ratings grouped by City.
-    Calculates avg cost for two, min cost, max cost, total restaurants, and avg aggregate rating.
+    Endpoint 2: Complex aggregation summarizing restaurant pricing and ratings grouped by City,
+    EXCLUDING unrated restaurants (aggregate_rating > 0).
+    Calculates avg cost for two, min cost, max cost, total rated restaurants, and avg aggregate rating.
     Supports query parameter:
-    - min_restaurants: Minimum number of restaurants required to include city (default: 1).
+    - min_restaurants: Minimum number of rated restaurants required to include city (default: 1).
     """
     try:
         min_restaurants = int(request.GET.get("min_restaurants", 1))
@@ -200,16 +202,17 @@ def city_cost_summary_view(request):
         min_restaurants = 1
 
     summary = (
-        City.objects.values("id", "name", "country__country_code")
+        City.objects.filter(locations__restaurants__rating__aggregate_rating__gt=0)
+        .values("id", "name", "country__country_code")
         .annotate(
-            total_restaurants=Count("locations__restaurants"),
-            avg_cost_for_two=Avg("locations__restaurants__average_cost_for_two"),
-            min_cost_for_two=Min("locations__restaurants__average_cost_for_two"),
-            max_cost_for_two=Max("locations__restaurants__average_cost_for_two"),
-            avg_rating=Avg("locations__restaurants__rating__aggregate_rating"),
+            total_rated_restaurants=Count("locations__restaurants", filter=Q(locations__restaurants__rating__aggregate_rating__gt=0)),
+            avg_cost_for_two=Avg("locations__restaurants__average_cost_for_two", filter=Q(locations__restaurants__rating__aggregate_rating__gt=0)),
+            min_cost_for_two=Min("locations__restaurants__average_cost_for_two", filter=Q(locations__restaurants__rating__aggregate_rating__gt=0)),
+            max_cost_for_two=Max("locations__restaurants__average_cost_for_two", filter=Q(locations__restaurants__rating__aggregate_rating__gt=0)),
+            avg_rating=Avg("locations__restaurants__rating__aggregate_rating", filter=Q(locations__restaurants__rating__aggregate_rating__gt=0)),
         )
-        .filter(total_restaurants__gte=min_restaurants)
-        .order_by("-total_restaurants", "-avg_rating")
+        .filter(total_rated_restaurants__gte=min_restaurants)
+        .order_by("-total_rated_restaurants", "-avg_rating")
     )
 
     return Response({
@@ -221,31 +224,30 @@ def city_cost_summary_view(request):
 @api_view(["GET"])
 def cuisine_analytics_view(request):
     """
-    Endpoint 3: Complex aggregation analyzing performance metrics across Cuisines.
-    Calculates total restaurants, average aggregate rating, and average cost for two per cuisine.
+    Endpoint 3: Complex aggregation analyzing performance metrics across Cuisines per Country or City.
     Supports query parameters:
+    - city: Filter cuisines offered by restaurants in a specific city
+    - country_code: Filter cuisines offered by restaurants in a specific country code
     - top: Limit top N cuisines (default: 15)
-    - ordering: Field to order by (-count, -avg_rating, -avg_cost) (default: -count)
     """
-    ordering = request.GET.get("ordering", "-count")
-    valid_orderings = {
-        "-count": "-restaurant_count",
-        "count": "restaurant_count",
-        "-avg_rating": "-avg_rating",
-        "avg_rating": "avg_rating",
-        "-avg_cost": "-avg_cost",
-        "avg_cost": "avg_cost",
-    }
-    order_field = valid_orderings.get(ordering, "-restaurant_count")
+    city_param = request.GET.get("city")
+    country_param = request.GET.get("country_code")
+
+    restaurant_filter = Q()
+    if city_param:
+        restaurant_filter &= Q(restaurants__location__city__name__icontains=city_param.strip())
+    if country_param and country_param.isdigit():
+        restaurant_filter &= Q(restaurants__location__city__country__country_code=int(country_param))
 
     analytics = (
-        Cuisine.objects.annotate(
-            restaurant_count=Count("restaurants"),
-            avg_rating=Avg("restaurants__rating__aggregate_rating"),
-            avg_cost=Avg("restaurants__average_cost_for_two"),
+        Cuisine.objects.filter(restaurant_filter)
+        .annotate(
+            restaurant_count=Count("restaurants", filter=restaurant_filter, distinct=True),
+            avg_rating=Avg("restaurants__rating__aggregate_rating", filter=restaurant_filter),
+            avg_cost=Avg("restaurants__average_cost_for_two", filter=restaurant_filter),
         )
         .filter(restaurant_count__gt=0)
-        .order_by(order_field)
+        .order_by("-restaurant_count", "-avg_rating")
     )
 
     try:
@@ -263,7 +265,14 @@ def cuisine_analytics_view(request):
             "average_cost_for_two": round(item.avg_cost, 2) if item.avg_cost else 0.0,
         })
 
+    filter_info = {}
+    if city_param:
+        filter_info["city"] = city_param
+    if country_param:
+        filter_info["country_code"] = country_param
+
     return Response({
+        "filters_applied": filter_info,
         "total_cuisines_analyzed": len(results),
         "cuisines": results
     })
@@ -330,53 +339,10 @@ def restaurant_search_view(request):
     })
 
 
-@api_view(["GET"])
-def country_stats_view(request):
-    """
-    Endpoint 5: Aggregates metrics across Countries.
-    Calculates total cities, total restaurants, overall avg rating, and total votes per country.
-    """
-    stats = (
-        Country.objects.annotate(
-            total_cities=Count("cities", distinct=True),
-            total_restaurants=Count("cities__locations__restaurants", distinct=True),
-            avg_rating=Avg("cities__locations__restaurants__rating__aggregate_rating"),
-            total_votes=Min("cities__locations__restaurants__rating__votes"), # Aggregation helper
-        )
-        .order_by("country_code")
-    )
-
-    results = []
-    for c in stats:
-        # Calculate precise aggregate metrics per country
-        rests = Restaurant.objects.filter(location__city__country=c)
-        rest_count = rests.count()
-        if rest_count > 0:
-            avg_r = rests.aggregate(avg=Avg("rating__aggregate_rating"))["avg"] or 0.0
-            tot_v = rests.aggregate(tot=Min("rating__votes"))["tot"] or 0
-        else:
-            avg_r = 0.0
-            tot_v = 0
-
-        results.append({
-            "id": c.id,
-            "country_code": c.country_code,
-            "country_name": c.name or f"Country {c.country_code}",
-            "total_cities": c.cities.count(),
-            "total_restaurants": rest_count,
-            "average_rating": round(avg_r, 2),
-        })
-
-    return Response({
-        "countries_count": len(results),
-        "countries": results
-    })
-
-
 @api_view(["POST"])
-def create_restaurant_view(request):
+def restaurant_list_create_view(request):
     """
-    Endpoint 6: POST endpoint to record a new restaurant.
+    Endpoint 5: POST endpoint to create a new restaurant.
     Uses RestaurantCreateSerializer for complete payload validation and relational persistence.
     """
     serializer = RestaurantCreateSerializer(data=request.data)
@@ -391,3 +357,53 @@ def create_restaurant_view(request):
             status=status.HTTP_201_CREATED,
         )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET", "PUT", "PATCH", "DELETE"])
+def restaurant_detail_view(request, pk):
+    """
+    Endpoint 6: GET, PUT, PATCH, DELETE endpoint for a specific restaurant by ID.
+    - GET: Retrieves nested details for restaurant with specified ID.
+    - PUT: Performs a full update of restaurant and nested location/rating/cuisines.
+    - PATCH: Performs a partial update of restaurant and nested location/rating/cuisines.
+    - DELETE: Deletes restaurant record and associated rating.
+    """
+    restaurant = get_object_or_404(
+        Restaurant.objects.select_related("location__city__country", "rating").prefetch_related("cuisines"),
+        restaurant_id=pk
+    )
+
+    if request.method == "GET":
+        serializer = RestaurantSerializer(restaurant)
+        return Response(serializer.data)
+
+    elif request.method in ["PUT", "PATCH"]:
+        serializer = RestaurantUpdateSerializer(
+            instance=restaurant,
+            data=request.data,
+            partial=(request.method == "PATCH")
+        )
+        if serializer.is_valid():
+            updated_restaurant = serializer.save()
+            read_serializer = RestaurantSerializer(updated_restaurant)
+            return Response(
+                {
+                    "message": "Restaurant successfully updated.",
+                    "data": read_serializer.data,
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == "DELETE":
+        rating = restaurant.rating
+        location = restaurant.location
+        restaurant.delete()
+        if rating:
+            rating.delete()
+        if location and location.restaurants.count() == 0:
+            location.delete()
+        return Response(
+            {"message": f"Restaurant with ID {pk} successfully deleted."},
+            status=status.HTTP_204_NO_CONTENT
+        )

@@ -9,6 +9,7 @@ Provides data serialization, deserialization, and validation for normalized mode
 - RatingSerializer
 - RestaurantSerializer (Read / Detail)
 - RestaurantCreateSerializer (Write / POST validation)
+- RestaurantUpdateSerializer (Write / PUT & PATCH validation and nested update)
 """
 
 from rest_framework import serializers
@@ -203,3 +204,107 @@ class RestaurantCreateSerializer(serializers.Serializer):
         restaurant.cuisines.set(cuisine_objs)
 
         return restaurant
+
+
+class RestaurantUpdateSerializer(serializers.Serializer):
+    """
+    Serializer for PUT/PATCH endpoint to update an existing restaurant
+    and its nested location, rating, and cuisine details.
+    """
+    name = serializers.CharField(max_length=255, required=False)
+
+    # City & Location details
+    city_name = serializers.CharField(max_length=100, required=False)
+    country_code = serializers.IntegerField(required=False)
+    address = serializers.CharField(max_length=500, required=False, allow_blank=True)
+    locality = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    locality_verbose = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    longitude = serializers.FloatField(required=False, allow_null=True)
+    latitude = serializers.FloatField(required=False, allow_null=True)
+
+    # Cuisines as list of strings
+    cuisines = serializers.ListField(
+        child=serializers.CharField(max_length=100),
+        required=False
+    )
+
+    # Rating details
+    aggregate_rating = serializers.FloatField(min_value=0.0, max_value=5.0, required=False)
+    rating_color = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    rating_text = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    votes = serializers.IntegerField(min_value=0, required=False)
+
+    # Cost & Flags
+    average_cost_for_two = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=0, required=False)
+    currency = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    has_table_booking = serializers.BooleanField(required=False)
+    has_online_delivery = serializers.BooleanField(required=False)
+    is_delivering_now = serializers.BooleanField(required=False)
+    switch_to_order_menu = serializers.BooleanField(required=False)
+    price_range = serializers.IntegerField(min_value=1, max_value=4, required=False)
+
+    def validate_name(self, value):
+        """Ensure restaurant name is non-empty if provided."""
+        if value is not None and not value.strip():
+            raise serializers.ValidationError("Restaurant name cannot be empty.")
+        return value.strip() if value else value
+
+    def update(self, instance, validated_data):
+        """
+        Updates the target Restaurant instance and its related Rating,
+        Location, City, Country, and Cuisine objects.
+        """
+        # Update Rating fields if provided
+        rating = instance.rating
+        if "aggregate_rating" in validated_data:
+            rating.aggregate_rating = validated_data.pop("aggregate_rating")
+        if "rating_color" in validated_data:
+            rating.rating_color = validated_data.pop("rating_color")
+        if "rating_text" in validated_data:
+            rating.rating_text = validated_data.pop("rating_text")
+        if "votes" in validated_data:
+            rating.votes = validated_data.pop("votes")
+        rating.save()
+
+        # Update Location / City / Country if provided
+        location = instance.location
+        city_name = validated_data.pop("city_name", None)
+        country_code = validated_data.pop("country_code", None)
+
+        if city_name or country_code:
+            current_country_code = country_code if country_code is not None else location.city.country.country_code
+            current_city_name = city_name if city_name is not None else location.city.name
+
+            country, _ = Country.objects.get_or_create(country_code=current_country_code)
+            city, _ = City.objects.get_or_create(name=current_city_name, country=country)
+            location.city = city
+
+        if "address" in validated_data:
+            location.address = validated_data.pop("address")
+        if "locality" in validated_data:
+            location.locality = validated_data.pop("locality")
+        if "locality_verbose" in validated_data:
+            location.locality_verbose = validated_data.pop("locality_verbose")
+        if "longitude" in validated_data:
+            location.longitude = validated_data.pop("longitude")
+        if "latitude" in validated_data:
+            location.latitude = validated_data.pop("latitude")
+        location.save()
+
+        # Update Cuisines if provided
+        if "cuisines" in validated_data:
+            cuisines_data = validated_data.pop("cuisines")
+            cuisine_objs = []
+            for c_name in cuisines_data:
+                cleaned_name = c_name.strip()
+                if cleaned_name:
+                    cuisine_obj, _ = Cuisine.objects.get_or_create(name=cleaned_name)
+                    cuisine_objs.append(cuisine_obj)
+            instance.cuisines.set(cuisine_objs)
+
+        # Update top-level Restaurant fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
